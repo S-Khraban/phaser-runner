@@ -15,7 +15,15 @@ import { spawnStalactite } from '../entities/spawnStalactite.js';
 import { spawnPickaxe } from '../entities/spawnPickaxe.js';
 import { spawnHeart } from '../entities/spawnHeart.js';
 
-import { PLAYER_SPAWN, STAL, BREAK } from './gameScene.constants.js';
+import { createParallaxBg } from '../systems/createParallaxBg.js';
+
+import {
+  PLAYER_SPAWN,
+  STAL,
+  BREAK,
+  ASSETS,
+  PARALLAX,
+} from './gameScene.constants.js';
 import {
   createRespawnBox,
   getNearestBoxInFront,
@@ -24,9 +32,35 @@ import {
 import { bindPickaxeBreak } from './gameScene.bindings.js';
 
 export default class GameScene extends Phaser.Scene {
+  preload() {
+    const baseUrl =
+      typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
+        ? import.meta.env.BASE_URL
+        : '/';
+
+    this.load.setBaseURL(baseUrl);
+
+    Object.values(ASSETS).forEach((group) => {
+      Object.values(group).forEach(({ KEY, SRC }) => {
+        if (!this.textures.exists(KEY)) {
+          this.load.image(KEY, SRC);
+        }
+      });
+    });
+  }
+
   create() {
     const { height } = this.scale;
     this.physics.world.setBounds(0, 0, 999999, height);
+
+    const parallax = createParallaxBg(this, {
+      key: ASSETS.BACKGROUND.CAVE.KEY,
+      factor: PARALLAX.CAVE.FACTOR,
+      depth: PARALLAX.CAVE.DEPTH,
+    });
+
+    this.events.once('shutdown', () => parallax.destroy());
+    this.events.once('destroy', () => parallax.destroy());
 
     const groups = {
       platforms: this.physics.add.staticGroup(),
@@ -56,7 +90,11 @@ export default class GameScene extends Phaser.Scene {
     const playerMovement = createPlayerMovement(player, controls);
     const playerJump = createPlayerJump(player, controls);
 
-    const boxCarry = createBoxCarrySystem(this, { player, boxes: groups.boxes, controls });
+    const boxCarry = createBoxCarrySystem(this, {
+      player,
+      boxes: groups.boxes,
+      controls,
+    });
 
     const onPlayerDeath = () => {
       hud.setPickaxeDurability(0);
@@ -94,15 +132,21 @@ export default class GameScene extends Phaser.Scene {
         respawnOffset: STAL.RESPAWN_OFFSET,
         boxes: groups.boxes,
         player,
-        spawnPickaxe: (scene, pos) => spawnPickaxe(scene, { ...pos, group: groups.items }),
-        spawnHeart: (scene, pos) => spawnHeart(scene, { ...pos, group: groups.items }),
+        spawnPickaxe: (scene, pos) =>
+          spawnPickaxe(scene, { ...pos, group: groups.items }),
+        spawnHeart: (scene, pos) =>
+          spawnHeart(scene, { ...pos, group: groups.items }),
         respawnBox,
         respawnSystem: respawn,
       });
     };
 
     spawnStal();
-    this.time.addEvent({ delay: STAL.SPAWN_EVERY, loop: true, callback: spawnStal });
+    this.time.addEvent({
+      delay: STAL.SPAWN_EVERY,
+      loop: true,
+      callback: spawnStal,
+    });
 
     const playerView = createPlayerView(this, player);
 
@@ -117,6 +161,7 @@ export default class GameScene extends Phaser.Scene {
     this._boxCarry = boxCarry;
     this._respawn = respawn;
     this._playerView = playerView;
+    this._parallax = parallax;
 
     bindPickaxeBreak(this, {
       player,
@@ -146,6 +191,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   update() {
+    this._parallax?.update?.();
+
     this._playerMovement.update();
     this._playerJump.update();
     this._boxCarry.update();

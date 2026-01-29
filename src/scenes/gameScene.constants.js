@@ -1,4 +1,7 @@
-export const PLAYER_SPAWN = { x: 120, y: 200 };
+export const PLAYER_SPAWN = {
+  x: 120,
+  y: 200,
+};
 
 export const STAL = {
   SPAWN_EVERY: 6500,
@@ -16,4 +19,45 @@ export const BREAK = {
   COIN_MIN: 30,
   COIN_MAX: 50,
   COIN_Y: -10,
+};
+
+export const PARALLAX = {
+  CAVE: {
+    FACTOR: 0.8,
+    DEPTH: -1000,
+  },
+};
+
+export const ASSETS = {
+  BACKGROUND: {
+    CAVE: {
+      KEY: 'bg_cave',
+      SRC: 'bg_cave.png',
+    },
+  },
+
+  PLAYER: {
+    BOX: {
+      KEY: 'box',
+      SRC: 'box.png',
+    },
+  },
+
+  OBSTACLES: {
+    ROCK: {
+      KEY: 'rock',
+      SRC: 'rock.png',
+    },
+  },
+
+  UI: {
+    FAVICON: {
+      KEY: 'favicon',
+      SRC: 'favicon.png',
+    },
+    LOGO: {
+      KEY: 'vite',
+      SRC: 'vite.svg',
+    },
+  },
 };
