@@ -93,6 +93,7 @@ export function spawnStalactite(scene, opts = {}) {
     spawnPickaxe,
     spawnHeart,
     respawnPlayer,
+    onPlayerDeath,
   } = opts;
 
   const sx =
@@ -148,6 +149,8 @@ export function spawnStalactite(scene, opts = {}) {
     hideGO(st);
 
     if (!player) return;
+
+    onPlayerDeath?.();
 
     const px0 = player.x;
     const py0 = player.y;

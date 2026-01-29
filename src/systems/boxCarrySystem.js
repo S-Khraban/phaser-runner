@@ -6,6 +6,8 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
 
   const pickupDistance = 20;
   const carryOffsetY = 56;
+  const carryOffsetX = 14;
+
   const throwVX = 320;
   const throwVY = -280;
 
@@ -13,6 +15,19 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
 
   function toGO(obj) {
     return obj && obj.gameObject ? obj.gameObject : obj;
+  }
+
+  function getFacing() {
+    return player?.getData?.('facing') === -1 ? -1 : 1;
+  }
+
+  function hasPickaxe() {
+    return !!player?.getData?.('hasPickaxe');
+  }
+
+  function isInFront(target) {
+    const f = getFacing();
+    return (target.x - player.x) * f > 0;
   }
 
   function clearCarry() {
@@ -54,12 +69,13 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
       box.body.enable = true;
       box.body.allowGravity = true;
 
-      const pvx = player.body.velocity.x || 0;
-      const dir = pvx !== 0 ? Math.sign(pvx) : 1;
+      const dir = getFacing();
 
       box.body.setVelocity(dir * throwVX, throwVY);
       return;
     }
+
+    if (hasPickaxe()) return;
 
     let target = null;
     let best = Infinity;
@@ -68,6 +84,7 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
       const box = toGO(b);
       if (!box?.active || !box?.body || !box.body.enable) return;
       if (!isInPickupRange(box)) return;
+      if (!isInFront(box)) return;
 
       const dx = player.x - box.x;
       const dy = player.y - box.y;
@@ -132,7 +149,9 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
           return;
         }
 
-        carriedBox.x = player.x;
+        const f = getFacing();
+
+        carriedBox.x = player.x + f * carryOffsetX;
         carriedBox.y = player.y - carryOffsetY;
 
         if (carriedBox.body) {
