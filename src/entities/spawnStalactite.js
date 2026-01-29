@@ -12,35 +12,11 @@ export const STALACTITE_DEFAULTS = Object.freeze({
   offscreenPadding: 200,
   hideMsOnBoxHit: 0,
   stalRespawnMsOnBoxHit: 150,
-  wMin: 20,
-  wMax: 25,
-  hMin: 50,
-  hMax: 60,
+  wMin: 30,
+  wMax: 35,
+  hMin: 60,
+  hMax: 75,
 });
-
-function ensureTexture(scene) {
-  if (scene.textures.exists(TEX_KEY)) return;
-
-  const W = Phaser.Math.Between(
-    STALACTITE_DEFAULTS.wMin,
-    STALACTITE_DEFAULTS.wMax
-  );
-  const H = Phaser.Math.Between(
-    STALACTITE_DEFAULTS.hMin,
-    STALACTITE_DEFAULTS.hMax
-  );
-
-  const g = scene.add.graphics();
-  g.fillStyle(0xff3b30, 1);
-  g.beginPath();
-  g.moveTo(W / 2, H);
-  g.lineTo(0, 0);
-  g.lineTo(W, 0);
-  g.closePath();
-  g.fillPath();
-  g.generateTexture(TEX_KEY, W, H);
-  g.destroy();
-}
 
 function rollDrop() {
   const r10 = Phaser.Math.Between(1, 2);
@@ -88,8 +64,6 @@ function showGO(go, x, y) {
 }
 
 function _spawnStalactite(scene, opts = {}) {
-  ensureTexture(scene);
-
   const {
     x,
     y = STALACTITE_DEFAULTS.y,
@@ -100,6 +74,10 @@ function _spawnStalactite(scene, opts = {}) {
     offscreenPadding = STALACTITE_DEFAULTS.offscreenPadding,
     hideMsOnBoxHit = STALACTITE_DEFAULTS.hideMsOnBoxHit,
     stalRespawnMsOnBoxHit = STALACTITE_DEFAULTS.stalRespawnMsOnBoxHit,
+    wMin = STALACTITE_DEFAULTS.wMin,
+    wMax = STALACTITE_DEFAULTS.wMax,
+    hMin = STALACTITE_DEFAULTS.hMin,
+    hMax = STALACTITE_DEFAULTS.hMax,
     boxes,
     player,
     spawnPickaxe,
@@ -116,12 +94,24 @@ function _spawnStalactite(scene, opts = {}) {
 
   const st = scene.physics.add.image(sx, y, TEX_KEY);
   st.setOrigin(0.5, 0.5);
+
+  const w = Phaser.Math.Between(wMin, wMax);
+  const h = Phaser.Math.Between(hMin, hMax);
+  st.setDisplaySize(w, h);
+  st.body?.setSize?.(w, h, true);
+
   st.setImmovable(true);
   st.body.allowGravity = false;
   st.setVelocityY(speedY);
 
   const doRespawn = () => {
     const nx = Phaser.Math.Between(minXPadding, scene.scale.width - minXPadding);
+
+    const rw = Phaser.Math.Between(wMin, wMax);
+    const rh = Phaser.Math.Between(hMin, hMax);
+    st.setDisplaySize(rw, rh);
+    st.body?.setSize?.(rw, rh, true);
+
     showGO(st, nx, STALACTITE_DEFAULTS.y);
     st.setVelocity(0, speedY);
   };

@@ -43,10 +43,21 @@ export const ASSETS = {
     },
   },
 
+  WORLD: {
+    PLATFORM: {
+      KEY: 'platform',
+      SRC: 'platform.png',
+    },
+  },
+
   OBSTACLES: {
     ROCK: {
       KEY: 'rock',
       SRC: 'rock.png',
+    },
+    STALACTITE: {
+      KEY: 'stalactite',
+      SRC: 'staloktut.png',
     },
   },
 
