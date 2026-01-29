@@ -1,10 +1,13 @@
 import Phaser from 'phaser';
+import { LevelStream } from '../systems/LevelStream.js';
 
 export default class GameScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
 
     this.physics.world.setBounds(0, 0, 999999, height);
+
+    this.platforms = this.physics.add.staticGroup();
 
     this.player = this.add.rectangle(120, 200, 32, 48, 0x4aa3ff);
     this.physics.add.existing(this.player);
@@ -21,12 +24,11 @@ export default class GameScene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
 
-    this.ground = this.add.rectangle(width / 2, height - 40, width, 40, 0x2b2b2b);
-    this.physics.add.existing(this.ground, true);
+    this.stream = new LevelStream(this, this.platforms);
+    this.stream.init(0);
 
-    this.physics.add.collider(this.player, this.ground);
+    this.physics.add.collider(this.player, this.platforms);
 
-    // CAMERA
     this.cam = this.cameras.main;
     this.cam.setBounds(0, 0, 999999, height);
     this.maxScrollX = 0;
@@ -52,16 +54,21 @@ export default class GameScene extends Phaser.Scene {
       this.player.body.setVelocityY(-520);
     }
 
-    // ONE-WAY CAMERA (target ~ 2/3 screen)
     const targetScrollX = this.player.x - width * (2 / 3);
     this.maxScrollX = Math.max(this.maxScrollX, targetScrollX);
     this.cam.scrollX = this.maxScrollX;
 
-    // LIMIT PLAYER LEFT EDGE
     const minPlayerX = this.cam.scrollX + this.leftMargin;
     if (this.player.x < minPlayerX) {
       this.player.x = minPlayerX;
       if (this.player.body.velocity.x < 0) this.player.body.setVelocityX(0);
+    }
+
+    this.stream.update(this.cam.scrollX);
+
+    if (this.player.y > 1200) {
+      this.player.setPosition(this.cam.scrollX + 120, 200);
+      this.player.body.setVelocity(0, 0);
     }
   }
 }
