@@ -9,7 +9,7 @@ export default class GameScene extends Phaser.Scene {
     this.player = this.add.rectangle(120, 200, 32, 48, 0x4aa3ff);
     this.physics.add.existing(this.player);
 
-    this.player.body.setCollideWorldBounds(true);
+    this.player.body.setCollideWorldBounds(false);
     this.player.body.setMaxVelocity(420, 900);
     this.player.body.setDragX(1400);
 
@@ -25,9 +25,17 @@ export default class GameScene extends Phaser.Scene {
     this.physics.add.existing(this.ground, true);
 
     this.physics.add.collider(this.player, this.ground);
+
+    // CAMERA
+    this.cam = this.cameras.main;
+    this.cam.setBounds(0, 0, 999999, height);
+    this.maxScrollX = 0;
+    this.leftMargin = 0;
   }
 
   update() {
+    const { width } = this.scale;
+
     const left = this.cursors.left.isDown || this.keyA.isDown;
     const right = this.cursors.right.isDown || this.keyD.isDown;
 
@@ -42,6 +50,18 @@ export default class GameScene extends Phaser.Scene {
 
     if (jumpPressed && this.player.body.blocked.down) {
       this.player.body.setVelocityY(-520);
+    }
+
+    // ONE-WAY CAMERA (target ~ 2/3 screen)
+    const targetScrollX = this.player.x - width * (2 / 3);
+    this.maxScrollX = Math.max(this.maxScrollX, targetScrollX);
+    this.cam.scrollX = this.maxScrollX;
+
+    // LIMIT PLAYER LEFT EDGE
+    const minPlayerX = this.cam.scrollX + this.leftMargin;
+    if (this.player.x < minPlayerX) {
+      this.player.x = minPlayerX;
+      if (this.player.body.velocity.x < 0) this.player.body.setVelocityX(0);
     }
   }
 }
