@@ -1,4 +1,10 @@
-export function createRespawnSystem(player, cameraFollow, boxCarry, platforms) {
+export function createRespawnSystem(
+  player,
+  cameraFollow,
+  boxCarry,
+  platforms,
+  opts = {}
+) {
   const fallY = 1200;
   const SPAWN_OFFSET_X = 120;
   const SPAWN_FROM_TOP_Y = -60;
@@ -6,9 +12,12 @@ export function createRespawnSystem(player, cameraFollow, boxCarry, platforms) {
   const RIGHT_SEARCH_PX = 1800;
   const STEP_PX = 60;
 
+  const extraOnDeath = opts?.onDeath;
+
   function onDeath() {
     player?.setData?.('hasPickaxe', false);
     boxCarry?.drop?.();
+    extraOnDeath?.();
   }
 
   function getTopPlatformAtX(x) {

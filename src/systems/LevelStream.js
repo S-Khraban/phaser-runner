@@ -102,6 +102,10 @@ export class LevelStream {
   spawnToken(x, y) {
     const t = this.scene.add.rectangle(x, y, 18, 18, 0xffd34a);
     this.scene.physics.add.existing(t, true);
+
+    t.setDataEnabled();
+    t.setData('type', 'coin');
+
     this.items.add(t);
   }
 

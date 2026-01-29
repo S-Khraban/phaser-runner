@@ -9,7 +9,6 @@ import { createPlayerMovement } from '../systems/playerMovement.js';
 import { createPlayerJump } from '../systems/playerJump.js';
 import { createRespawnSystem } from '../systems/respawnSystem.js';
 import { setupColliders } from '../systems/setupColliders.js';
-import { setupTokenSystem } from '../systems/tokenSystem.js';
 import { createPlayerView } from '../entities/playerView.js';
 
 import { spawnStalactite } from '../entities/spawnStalactite.js';
@@ -52,15 +51,15 @@ export default class GameScene extends Phaser.Scene {
 
     const player = createPlayer(this, PLAYER_SPAWN);
     player.setDataEnabled();
-    if (player.getData('hasPickaxe') == null) {
-      player.setData('hasPickaxe', true);
-    }
+
     if (player.getData('facing') == null) {
       player.setData('facing', 1);
     }
 
     const controls = createControls(this);
     const hud = createHud(this);
+
+    player.setData('hasPickaxe', hud.hasPickaxe());
 
     const stream = new LevelStream(
       this,
@@ -81,6 +80,20 @@ export default class GameScene extends Phaser.Scene {
       controls,
     });
 
+    const onPlayerDeath = () => {
+      hud.setPickaxeDurability(0);
+      player.setData('hasPickaxe', false);
+      boxCarry?.drop?.();
+    };
+
+    const respawn = createRespawnSystem(
+      player,
+      cameraFollow,
+      boxCarry,
+      groups.platforms,
+      { onDeath: onPlayerDeath }
+    );
+
     setupColliders(this, {
       player,
       platforms: groups.platforms,
@@ -88,32 +101,8 @@ export default class GameScene extends Phaser.Scene {
       rocks: groups.rocks,
       boxCarry,
       items: groups.items,
-    });
-
-    setupTokenSystem(this, {
-      player,
-      items: groups.items,
       hud,
     });
-
-    const respawn = createRespawnSystem(
-  player,
-  cameraFollow,
-  boxCarry,
-  groups.platforms
-);
-
-
-    const respawnPlayer = (p) => {
-      p.setPosition(PLAYER_SPAWN.x, PLAYER_SPAWN.y);
-      p.setActive(true);
-      p.setVisible(true);
-
-      if (p.body) {
-        p.body.enable = true;
-        p.body.setVelocity(0, 0);
-      }
-    };
 
     const respawnBox = (box) => {
       if (!box) return;
@@ -139,11 +128,6 @@ export default class GameScene extends Phaser.Scene {
       }
     };
 
-    const onPlayerDeath = () => {
-      player.setData('hasPickaxe', false);
-      boxCarry?.drop?.();
-    };
-
     const spawnStal = () => {
       const x = player.x + Phaser.Math.Between(STAL.MIN_AHEAD, STAL.MAX_AHEAD);
 
@@ -154,14 +138,12 @@ export default class GameScene extends Phaser.Scene {
         respawnOffset: STAL.RESPAWN_OFFSET,
         boxes: groups.boxes,
         player,
-        respawnDelay: STAL.RESPAWN_DELAY,
         spawnPickaxe: (scene, pos) =>
           spawnPickaxe(scene, { ...pos, group: groups.items }),
         spawnHeart: (scene, pos) =>
           spawnHeart(scene, { ...pos, group: groups.items }),
         respawnBox,
-        respawnPlayer,
-        onPlayerDeath,
+        respawnSystem: respawn,
       });
     };
 
@@ -177,7 +159,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.input.keyboard.on('keydown-SPACE', () => {
       if (!player.active || !player.visible) return;
-      if (!player.getData('hasPickaxe')) return;
+      if (!hud.hasPickaxe()) return;
 
       playerView.swingPickaxe();
       this.tryBreakBox();
@@ -237,11 +219,16 @@ export default class GameScene extends Phaser.Scene {
   }
 
   tryBreakBox() {
-    if (!this._player.getData('hasPickaxe')) return;
+    if (!this._hud.hasPickaxe()) return;
     if (this._boxCarry?.isCarrying?.()) return;
 
     const box = this.getNearestBoxInFront();
     if (!box) return;
+
+    const used = this._hud.usePickaxe();
+    if (!used) return;
+
+    this._player.setData('hasPickaxe', this._hud.hasPickaxe());
 
     this.spawnCoinFromBox(box);
     box.destroy?.();

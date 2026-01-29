@@ -1,8 +1,6 @@
 import Phaser from 'phaser';
 
 const TEX_KEY = 'stalactite';
-const W = 36;
-const H = 40;
 
 export const STALACTITE_DEFAULTS = Object.freeze({
   y: -60,
@@ -13,10 +11,23 @@ export const STALACTITE_DEFAULTS = Object.freeze({
   offscreenPadding: 200,
   hideMsOnBoxHit: 0,
   stalRespawnMsOnBoxHit: 150,
+  wMin: 18,
+  wMax: 22,
+  hMin: 45,
+  hMax: 53,
 });
 
 function ensureTexture(scene) {
   if (scene.textures.exists(TEX_KEY)) return;
+
+  const W = Phaser.Math.Between(
+    STALACTITE_DEFAULTS.wMin,
+    STALACTITE_DEFAULTS.wMax
+  );
+  const H = Phaser.Math.Between(
+    STALACTITE_DEFAULTS.hMin,
+    STALACTITE_DEFAULTS.hMax
+  );
 
   const g = scene.add.graphics();
   g.fillStyle(0xff3b30, 1);
@@ -75,7 +86,7 @@ function showGO(go, x, y) {
   }
 }
 
-export function spawnStalactite(scene, opts = {}) {
+function _spawnStalactite(scene, opts = {}) {
   ensureTexture(scene);
 
   const {
@@ -93,6 +104,7 @@ export function spawnStalactite(scene, opts = {}) {
     spawnPickaxe,
     spawnHeart,
     respawnPlayer,
+    respawnSystem,
     onPlayerDeath,
   } = opts;
 
@@ -135,8 +147,8 @@ export function spawnStalactite(scene, opts = {}) {
 
     dropItem();
 
+    if (box?.destroy) box.destroy();
     hideGO(st);
-    hideGO(box);
 
     scene.time.delayedCall(hideMsOnBoxHit, () => {});
 
@@ -147,29 +159,32 @@ export function spawnStalactite(scene, opts = {}) {
 
   const onHitPlayer = () => {
     hideGO(st);
-
     if (!player) return;
 
-    onPlayerDeath?.();
+    if (respawnSystem?.respawnNow) {
+      respawnSystem.respawnNow();
+    } else {
+      onPlayerDeath?.();
 
-    const px0 = player.x;
-    const py0 = player.y;
+      const px0 = player.x;
+      const py0 = player.y;
 
-    player.setActive?.(false);
-    player.setVisible?.(false);
-    if (player.body) player.body.enable = false;
+      player.setActive?.(false);
+      player.setVisible?.(false);
+      if (player.body) player.body.enable = false;
 
-    scene.time.delayedCall(respawnDelay, () => {
-      if (typeof respawnPlayer === 'function') {
-        respawnPlayer(player);
-      } else {
-        if (player.body) player.body.enable = true;
-        player.setPosition?.(px0 ?? 120, py0 ?? 200);
-        player.setActive?.(true);
-        player.setVisible?.(true);
-        player.body?.setVelocity?.(0, 0);
-      }
-    });
+      scene.time.delayedCall(respawnDelay, () => {
+        if (typeof respawnPlayer === 'function') {
+          respawnPlayer(player);
+        } else {
+          if (player.body) player.body.enable = true;
+          player.setPosition?.(px0 ?? 120, py0 ?? 200);
+          player.setActive?.(true);
+          player.setVisible?.(true);
+          player.body?.setVelocity?.(0, 0);
+        }
+      });
+    }
 
     scene.time.delayedCall(150, () => {
       doRespawn();
@@ -199,3 +214,6 @@ export function spawnStalactite(scene, opts = {}) {
 
   return st;
 }
+
+export const spawnStalactite = _spawnStalactite;
+

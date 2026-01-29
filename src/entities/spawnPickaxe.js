@@ -34,6 +34,7 @@ export function spawnPickaxe(scene, opts = {}) {
     : scene.physics.add.image(x, y, TEX_KEY);
 
   item.setOrigin(0.5, 0.5);
+
   item.setDataEnabled();
   item.setData('type', 'pickaxe');
 

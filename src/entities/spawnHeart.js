@@ -41,6 +41,9 @@ export function spawnHeart(scene, opts = {}) {
     ? group.create(x, y, TEX_KEY)
     : scene.physics.add.image(x, y, TEX_KEY);
 
+  item.setDataEnabled();
+  item.setData('type', 'heart');
+
   item.setOrigin(0.5, 0.5);
 
   if (item.body) {
