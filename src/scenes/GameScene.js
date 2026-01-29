@@ -26,6 +26,7 @@ import {
 } from './gameScene.constants.js';
 import {
   createRespawnBox,
+  destroyBox,
   getNearestBoxInFront,
   spawnCoinFromBox,
 } from './gameScene.helpers.js';
@@ -187,7 +188,7 @@ export default class GameScene extends Phaser.Scene {
     this._player.setData('hasPickaxe', this._hud.hasPickaxe());
 
     spawnCoinFromBox(this, this._g.items, this._player, box, BREAK);
-    box.destroy?.();
+    destroyBox(box);
   }
 
   update() {

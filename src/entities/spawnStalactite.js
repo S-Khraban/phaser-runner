@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { destroyBox } from '../scenes/gameScene.helpers.js';
 
 const TEX_KEY = 'stalactite';
 
@@ -147,7 +148,7 @@ function _spawnStalactite(scene, opts = {}) {
 
     dropItem();
 
-    if (box?.destroy) box.destroy();
+    destroyBox(box);
     hideGO(st);
 
     scene.time.delayedCall(hideMsOnBoxHit, () => {});

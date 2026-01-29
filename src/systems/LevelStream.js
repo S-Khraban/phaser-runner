@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { destroyBox } from '../scenes/gameScene.helpers.js';
 
 export class LevelStream {
   constructor(scene, platforms, items, boxes, rocks) {
@@ -20,6 +21,10 @@ export class LevelStream {
 
     this.platformH = 26;
     this.rockR = 25;
+
+    this.boxW = 34;
+    this.boxH = 34;
+    this.boxTexKey = 'box';
   }
 
   init(startX = 0) {
@@ -49,7 +54,16 @@ export class LevelStream {
     });
 
     this.boxes.getChildren().forEach((b) => {
-      if (b.x + b.displayWidth / 2 < killX) b.destroy();
+      if (b.x + b.displayWidth / 2 < killX) {
+        destroyBox(b);
+        return;
+      }
+
+      const view = b.getData?.('view');
+      if (view) {
+        view.x = b.x;
+        view.y = b.y;
+      }
     });
 
     if (this.rocks) {
@@ -110,7 +124,7 @@ export class LevelStream {
   }
 
   spawnBox(x, y) {
-    const b = this.scene.add.rectangle(x, y, 34, 34, 0xa06a3b);
+    const b = this.scene.add.rectangle(x, y, this.boxW, this.boxH, 0x000000, 0);
     this.scene.physics.add.existing(b);
 
     const body = b.body;
@@ -118,6 +132,13 @@ export class LevelStream {
     body.setDragX(600);
     body.setMaxVelocity(500, 900);
     body.setCollideWorldBounds(false);
+
+    const view = this.scene.add.image(x, y, this.boxTexKey);
+    view.setOrigin(0.5, 0.5);
+    view.setDisplaySize(this.boxW, this.boxH);
+
+    b.setDataEnabled();
+    b.setData('view', view);
 
     this.boxes.add(b);
   }

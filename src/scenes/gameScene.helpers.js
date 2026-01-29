@@ -1,8 +1,21 @@
 import Phaser from 'phaser';
 import { spawnCoin } from '../entities/spawnCoin.js';
 
+function toGO(obj) {
+  return obj && obj.gameObject ? obj.gameObject : obj;
+}
+
+export function destroyBox(box) {
+  const b = toGO(box);
+  if (!b) return;
+
+  b.getData?.('view')?.destroy?.();
+  b.destroy?.();
+}
+
 export function createRespawnBox() {
-  return function respawnBox(box) {
+  return function respawnBox(rawBox) {
+    const box = toGO(rawBox);
     if (!box) return;
 
     if (box.getData('spawnX') == null) box.setData('spawnX', box.x);
@@ -24,6 +37,13 @@ export function createRespawnBox() {
       box.body.setVelocity(0, 0);
       box.body.allowGravity = true;
     }
+
+    const view = box.getData?.('view');
+    if (view) {
+      view.setPosition(box.x, box.y);
+      view.setVisible(true);
+      view.setActive?.(true);
+    }
   };
 }
 
@@ -37,7 +57,7 @@ export function getNearestBoxInFront(player, boxesGroup, { dist, dy }) {
   let bestDist = dist;
 
   for (const raw of boxesGroup.getChildren()) {
-    const box = raw && raw.gameObject ? raw.gameObject : raw;
+    const box = toGO(raw);
     if (!box?.active) continue;
 
     const dx = box.x - player.x;
