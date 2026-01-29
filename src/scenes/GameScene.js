@@ -8,6 +8,7 @@ export default class GameScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, 999999, height);
 
     this.platforms = this.physics.add.staticGroup();
+    this.items = this.physics.add.staticGroup();
 
     this.player = this.add.rectangle(120, 200, 32, 48, 0x4aa3ff);
     this.physics.add.existing(this.player);
@@ -24,10 +25,25 @@ export default class GameScene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
 
-    this.stream = new LevelStream(this, this.platforms);
+    this.stream = new LevelStream(this, this.platforms, this.items);
     this.stream.init(0);
 
     this.physics.add.collider(this.player, this.platforms);
+
+    this.score = 0;
+    this.scoreText = this.add
+      .text(16, 16, 'Tokens: 0', {
+        fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial',
+        fontSize: '20px',
+        color: '#ffffff',
+      })
+      .setScrollFactor(0);
+
+    this.physics.add.overlap(this.player, this.items, (_p, token) => {
+      token.destroy();
+      this.score += 1;
+      this.scoreText.setText(`Tokens: ${this.score}`);
+    });
 
     this.cam = this.cameras.main;
     this.cam.setBounds(0, 0, 999999, height);
