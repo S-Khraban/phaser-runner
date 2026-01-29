@@ -1,5 +1,13 @@
 import Phaser from 'phaser';
 import { destroyBox } from '../scenes/gameScene.helpers.js';
+import { spawnPlatform } from '../entities/spawnPlatform.js';
+import { spawnRock } from '../entities/spawnRock.js';
+
+function destroyWithView(go) {
+  if (!go) return;
+  go.getData?.('view')?.destroy?.();
+  go.destroy?.();
+}
 
 export class LevelStream {
   constructor(scene, platforms, items, boxes, rocks) {
@@ -25,6 +33,9 @@ export class LevelStream {
     this.boxW = 34;
     this.boxH = 34;
     this.boxTexKey = 'box';
+
+    this.platformTexKey = 'platform';
+    this.rockTexKey = 'rock';
   }
 
   init(startX = 0) {
@@ -46,7 +57,16 @@ export class LevelStream {
     const killX = cameraX - this.cleanupPadding;
 
     this.platforms.getChildren().forEach((p) => {
-      if (p.x + p.displayWidth / 2 < killX) p.destroy();
+      if (p.x + p.displayWidth / 2 < killX) {
+        destroyWithView(p);
+        return;
+      }
+
+      const view = p.getData?.('view');
+      if (view) {
+        view.x = p.x;
+        view.y = p.y;
+      }
     });
 
     this.items.getChildren().forEach((it) => {
@@ -68,7 +88,16 @@ export class LevelStream {
 
     if (this.rocks) {
       this.rocks.getChildren().forEach((r) => {
-        if (r.x + r.displayWidth / 2 < killX) r.destroy();
+        if (r.x + r.displayWidth / 2 < killX) {
+          destroyWithView(r);
+          return;
+        }
+
+        const view = r.getData?.('view');
+        if (view) {
+          view.x = r.x;
+          view.y = r.y;
+        }
       });
     }
   }
@@ -108,9 +137,10 @@ export class LevelStream {
   }
 
   spawnPlatform(cx, y, w) {
-    const p = this.scene.add.rectangle(cx, y, w, this.platformH, 0x3d3d3d);
-    this.scene.physics.add.existing(p, true);
-    this.platforms.add(p);
+    return spawnPlatform(this.scene, this.platforms, cx, y, w, {
+      h: this.platformH,
+      texKey: this.platformTexKey,
+    });
   }
 
   spawnToken(x, y) {
@@ -144,14 +174,10 @@ export class LevelStream {
   }
 
   spawnRock(x, y) {
-    if (!this.rocks) return;
+    if (!this.rocks) return null;
 
-    const r = this.scene.add.circle(x, y, this.rockR, 0x8a8f98);
-    this.scene.physics.add.existing(r, true);
-
-    r.body.setCircle(this.rockR);
-    r.body.setOffset(0, 0);
-
-    this.rocks.add(r);
+    return spawnRock(this.scene, this.rocks, x, y, this.rockR, {
+      texKey: this.rockTexKey,
+    });
   }
 }
