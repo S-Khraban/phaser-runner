@@ -1,16 +1,21 @@
 import Phaser from 'phaser';
 
 export class LevelStream {
-  constructor(scene, platforms, items) {
+  constructor(scene, platforms, items, boxes) {
     this.scene = scene;
     this.platforms = platforms;
     this.items = items;
+    this.boxes = boxes;
 
     this.generatedUntilX = 0;
     this.cleanupPadding = 500;
     this.spawnAhead = 1600;
 
     this.lastY = 420;
+
+    this.rockChance = 0.18;
+    this.rockMinGap = 260;
+    this.lastRockX = -999999;
   }
 
   init(startX = 0) {
@@ -38,6 +43,10 @@ export class LevelStream {
     this.items.getChildren().forEach((it) => {
       if (it.x + it.displayWidth / 2 < killX) it.destroy();
     });
+
+    this.boxes.getChildren().forEach((b) => {
+      if (b.x + b.displayWidth / 2 < killX) b.destroy();
+    });
   }
 
   generateChunk() {
@@ -52,11 +61,24 @@ export class LevelStream {
 
     this.spawnPlatform(cx, this.lastY, width);
 
-    if (Math.random() < 0.55) {
+    if (Math.random() < 0.25) {
+      this.spawnBox(cx + Phaser.Math.Between(-60, 60), this.lastY - 44);
+    }
+
+    if (Math.random() < 0.35) {
       this.spawnToken(cx, this.lastY - 60);
     }
 
+    if (this.canSpawnRock(cx) && Math.random() < this.rockChance) {
+      this.spawnRock(cx + Phaser.Math.Between(-40, 40), this.lastY - 44);
+      this.lastRockX = cx;
+    }
+
     this.generatedUntilX = x + width;
+  }
+
+  canSpawnRock(x) {
+    return x - this.lastRockX >= this.rockMinGap;
   }
 
   spawnPlatform(cx, y, w) {
@@ -69,5 +91,29 @@ export class LevelStream {
     const t = this.scene.add.rectangle(x, y, 18, 18, 0xffd34a);
     this.scene.physics.add.existing(t, true);
     this.items.add(t);
+  }
+
+  spawnBox(x, y) {
+    const b = this.scene.add.rectangle(x, y, 34, 34, 0xa06a3b);
+    this.scene.physics.add.existing(b);
+
+    const body = b.body;
+    body.setBounce(0);
+    body.setDragX(600);
+    body.setMaxVelocity(500, 900);
+    body.setCollideWorldBounds(false);
+
+    this.boxes.add(b);
+  }
+
+  spawnRock(x, y) {
+    const r = this.scene.add.circle(x, y, 18, 0x8a8f98);
+    this.scene.physics.add.existing(r, true);
+
+    if (!this.scene.rocks) {
+      this.scene.rocks = this.scene.physics.add.staticGroup();
+    }
+
+    this.scene.rocks.add(r);
   }
 }
