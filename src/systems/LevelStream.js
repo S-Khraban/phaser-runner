@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 
 export class LevelStream {
-  constructor(scene, platforms, items, boxes) {
+  constructor(scene, platforms, items, boxes, rocks) {
     this.scene = scene;
     this.platforms = platforms;
     this.items = items;
     this.boxes = boxes;
+    this.rocks = rocks;
 
     this.generatedUntilX = 0;
     this.cleanupPadding = 500;
@@ -47,6 +48,12 @@ export class LevelStream {
     this.boxes.getChildren().forEach((b) => {
       if (b.x + b.displayWidth / 2 < killX) b.destroy();
     });
+
+    if (this.rocks) {
+      this.rocks.getChildren().forEach((r) => {
+        if (r.x + r.displayWidth / 2 < killX) r.destroy();
+      });
+    }
   }
 
   generateChunk() {
@@ -107,13 +114,10 @@ export class LevelStream {
   }
 
   spawnRock(x, y) {
+    if (!this.rocks) return;
+
     const r = this.scene.add.circle(x, y, 18, 0x8a8f98);
     this.scene.physics.add.existing(r, true);
-
-    if (!this.scene.rocks) {
-      this.scene.rocks = this.scene.physics.add.staticGroup();
-    }
-
-    this.scene.rocks.add(r);
+    this.rocks.add(r);
   }
 }
