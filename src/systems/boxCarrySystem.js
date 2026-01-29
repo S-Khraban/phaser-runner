@@ -15,6 +15,11 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
     return obj && obj.gameObject ? obj.gameObject : obj;
   }
 
+  function clearCarry() {
+    isCarrying = false;
+    carriedBox = null;
+  }
+
   function getPickupRect() {
     const d = pickupDistance;
     const pb = player.getBounds();
@@ -39,8 +44,12 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
     if (isCarrying && carriedBox) {
       const box = carriedBox;
 
-      isCarrying = false;
-      carriedBox = null;
+      if (!box?.active || !box?.body) {
+        clearCarry();
+        return;
+      }
+
+      clearCarry();
 
       box.body.enable = true;
       box.body.allowGravity = true;
@@ -57,7 +66,7 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
 
     boxes.getChildren().forEach((b) => {
       const box = toGO(b);
-      if (!box?.body || !box.body.enable) return;
+      if (!box?.active || !box?.body || !box.body.enable) return;
       if (!isInPickupRange(box)) return;
 
       const dx = player.x - box.x;
@@ -70,7 +79,7 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
       }
     });
 
-    if (!target) return;
+    if (!target?.body) return;
 
     isCarrying = true;
     carriedBox = target;
@@ -82,7 +91,7 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
 
   function onPlayerBoxOverlap(_p, rawBox) {
     const box = toGO(rawBox);
-    if (!box?.body) return;
+    if (!box?.active || !box?.body) return;
     if (isCarrying) return;
 
     const pushingLeft = controls.left();
@@ -118,8 +127,18 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
       }
 
       if (isCarrying && carriedBox) {
+        if (!carriedBox?.active) {
+          clearCarry();
+          return;
+        }
+
         carriedBox.x = player.x;
         carriedBox.y = player.y - carryOffsetY;
+
+        if (carriedBox.body) {
+          carriedBox.body.velocity.x = 0;
+          carriedBox.body.velocity.y = 0;
+        }
       }
     },
     onPlayerBoxOverlap,
@@ -129,6 +148,18 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
     },
     isCarrying() {
       return isCarrying;
+    },
+    drop() {
+      if (!isCarrying || !carriedBox) return;
+
+      const box = carriedBox;
+      clearCarry();
+
+      if (!box?.active || !box?.body) return;
+
+      box.body.enable = true;
+      box.body.allowGravity = true;
+      box.body.setVelocity(0, 0);
     },
   };
 }

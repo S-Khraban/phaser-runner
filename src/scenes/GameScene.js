@@ -11,6 +11,22 @@ import { createRespawnSystem } from '../systems/respawnSystem.js';
 import { setupColliders } from '../systems/setupColliders.js';
 import { setupTokenSystem } from '../systems/tokenSystem.js';
 
+import { spawnStalactite } from '../entities/spawnStalactite.js';
+import { spawnPickaxe } from '../entities/spawnPickaxe.js';
+import { spawnHeart } from '../entities/spawnHeart.js';
+
+const PLAYER_SPAWN = { x: 120, y: 200 };
+
+const STAL = {
+  SPAWN_EVERY: 6500,
+  MIN_AHEAD: 360,
+  MAX_AHEAD: 760,
+  Y: -60,
+  SPEED_Y: 180,
+  RESPAWN_DELAY: 2200,
+  RESPAWN_OFFSET: 50,
+};
+
 export default class GameScene extends Phaser.Scene {
   create() {
     const { height } = this.scale;
@@ -24,7 +40,7 @@ export default class GameScene extends Phaser.Scene {
       rocks: this.physics.add.staticGroup(),
     };
 
-    const player = createPlayer(this, { x: 120, y: 200 });
+    const player = createPlayer(this, PLAYER_SPAWN);
 
     const controls = createControls(this);
     const hud = createHud(this);
@@ -64,6 +80,69 @@ export default class GameScene extends Phaser.Scene {
     });
 
     const respawn = createRespawnSystem(player, cameraFollow);
+
+    const respawnPlayer = (p) => {
+      p.setPosition(PLAYER_SPAWN.x, PLAYER_SPAWN.y);
+      p.setActive(true);
+      p.setVisible(true);
+
+      if (p.body) {
+        p.body.enable = true;
+        p.body.setVelocity(0, 0);
+      }
+    };
+
+    const respawnBox = (box) => {
+      if (!box) return;
+
+      if (box.getData('spawnX') == null) box.setData('spawnX', box.x);
+      if (box.getData('spawnY') == null) box.setData('spawnY', box.y);
+
+      const bx = box.getData('spawnX');
+      const by = box.getData('spawnY');
+
+      if (box.disableBody && box.enableBody) {
+        box.enableBody(true, bx, by, true, true);
+      } else {
+        box.setPosition(bx, by);
+        box.setActive?.(true);
+        box.setVisible?.(true);
+        if (box.body) box.body.enable = true;
+      }
+
+      if (box.body) {
+        box.body.setVelocity(0, 0);
+        box.body.allowGravity = true;
+      }
+    };
+
+    const spawnStal = () => {
+      const x = player.x + Phaser.Math.Between(STAL.MIN_AHEAD, STAL.MAX_AHEAD);
+
+      spawnStalactite(this, {
+        x,
+        y: STAL.Y,
+        speedY: STAL.SPEED_Y,
+        respawnOffset: STAL.RESPAWN_OFFSET,
+        boxes: groups.boxes,
+        player,
+        respawnDelay: STAL.RESPAWN_DELAY,
+        spawnPickaxe: (scene, pos) =>
+          spawnPickaxe(scene, { ...pos, group: groups.items }),
+        spawnHeart: (scene, pos) =>
+          spawnHeart(scene, { ...pos, group: groups.items }),
+        respawnBox,
+        respawnPlayer,
+      });
+    };
+
+    spawnStal();
+
+    this.time.addEvent({
+      delay: STAL.SPAWN_EVERY,
+      loop: true,
+      callback: spawnStal,
+    });
 
     this._g = groups;
     this._player = player;
