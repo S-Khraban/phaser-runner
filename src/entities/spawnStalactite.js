@@ -11,10 +11,10 @@ export const STALACTITE_DEFAULTS = Object.freeze({
   offscreenPadding: 200,
   hideMsOnBoxHit: 0,
   stalRespawnMsOnBoxHit: 150,
-  wMin: 18,
-  wMax: 22,
-  hMin: 45,
-  hMax: 53,
+  wMin: 20,
+  wMax: 25,
+  hMin: 50,
+  hMax: 60,
 });
 
 function ensureTexture(scene) {
@@ -161,7 +161,9 @@ function _spawnStalactite(scene, opts = {}) {
     hideGO(st);
     if (!player) return;
 
-    if (respawnSystem?.respawnNow) {
+    if (typeof respawnSystem?.respawn === 'function') {
+      respawnSystem.respawn();
+    } else if (typeof respawnSystem?.respawnNow === 'function') {
       respawnSystem.respawnNow();
     } else {
       onPlayerDeath?.();
@@ -216,4 +218,3 @@ function _spawnStalactite(scene, opts = {}) {
 }
 
 export const spawnStalactite = _spawnStalactite;
-

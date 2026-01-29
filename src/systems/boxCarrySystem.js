@@ -5,7 +5,6 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
   let isCarrying = false;
 
   const pickupDistance = 20;
-  const carryOffsetY = 56;
   const carryOffsetX = 14;
 
   const throwVX = 320;
@@ -137,6 +136,14 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
     player.body.setVelocityX(pvx * 0.7);
   }
 
+  function getTightCarryY(box) {
+    const pH =
+      player.displayHeight ?? player.height ?? player.body?.height ?? 0;
+    const bH = box.displayHeight ?? box.height ?? box.body?.height ?? 0;
+
+    return player.y - pH / 2 - bH / 2;
+  }
+
   return {
     update() {
       if (controls.actionJustDown()) {
@@ -152,7 +159,7 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
         const f = getFacing();
 
         carriedBox.x = player.x + f * carryOffsetX;
-        carriedBox.y = player.y - carryOffsetY;
+        carriedBox.y = getTightCarryY(carriedBox);
 
         if (carriedBox.body) {
           carriedBox.body.velocity.x = 0;

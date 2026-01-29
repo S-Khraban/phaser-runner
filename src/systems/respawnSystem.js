@@ -64,18 +64,24 @@ export function createRespawnSystem(
     };
   }
 
+  function respawnAtCamera() {
+    onDeath();
+
+    const baseX = cameraFollow.getScrollX() + SPAWN_OFFSET_X;
+    const pos = getSafeSpawnPos(baseX);
+
+    player.setPosition(pos.x, pos.y);
+    player.body?.setVelocity?.(0, 0);
+  }
+
   return {
+    respawn: respawnAtCamera,
+
     update() {
       cameraFollow.clampPlayer(player);
 
       if (player.y > fallY) {
-        onDeath();
-
-        const baseX = cameraFollow.getScrollX() + SPAWN_OFFSET_X;
-        const pos = getSafeSpawnPos(baseX);
-
-        player.setPosition(pos.x, pos.y);
-        player.body?.setVelocity?.(0, 0);
+        respawnAtCamera();
       }
     },
   };

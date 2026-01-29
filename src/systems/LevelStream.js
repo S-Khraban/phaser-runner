@@ -19,7 +19,7 @@ export class LevelStream {
     this.lastRockX = -999999;
 
     this.platformH = 26;
-    this.rockR = 18;
+    this.rockR = 25;
   }
 
   init(startX = 0) {
