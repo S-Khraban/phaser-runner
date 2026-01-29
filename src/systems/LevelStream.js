@@ -17,6 +17,9 @@ export class LevelStream {
     this.rockChance = 0.18;
     this.rockMinGap = 260;
     this.lastRockX = -999999;
+
+    this.platformH = 26;
+    this.rockR = 18;
   }
 
   init(startX = 0) {
@@ -68,16 +71,18 @@ export class LevelStream {
 
     this.spawnPlatform(cx, this.lastY, width);
 
+    const topY = this.lastY - this.platformH / 2;
+
     if (Math.random() < 0.25) {
-      this.spawnBox(cx + Phaser.Math.Between(-60, 60), this.lastY - 44);
+      this.spawnBox(cx + Phaser.Math.Between(-60, 60), topY - 17);
     }
 
     if (Math.random() < 0.35) {
-      this.spawnToken(cx, this.lastY - 60);
+      this.spawnToken(cx, topY - 60);
     }
 
     if (this.canSpawnRock(cx) && Math.random() < this.rockChance) {
-      this.spawnRock(cx + Phaser.Math.Between(-40, 40), this.lastY - 44);
+      this.spawnRock(cx + Phaser.Math.Between(-40, 40), topY - this.rockR);
       this.lastRockX = cx;
     }
 
@@ -89,7 +94,7 @@ export class LevelStream {
   }
 
   spawnPlatform(cx, y, w) {
-    const p = this.scene.add.rectangle(cx, y, w, 26, 0x3d3d3d);
+    const p = this.scene.add.rectangle(cx, y, w, this.platformH, 0x3d3d3d);
     this.scene.physics.add.existing(p, true);
     this.platforms.add(p);
   }
@@ -116,8 +121,12 @@ export class LevelStream {
   spawnRock(x, y) {
     if (!this.rocks) return;
 
-    const r = this.scene.add.circle(x, y, 18, 0x8a8f98);
+    const r = this.scene.add.circle(x, y, this.rockR, 0x8a8f98);
     this.scene.physics.add.existing(r, true);
+
+    r.body.setCircle(this.rockR);
+    r.body.setOffset(0, 0);
+
     this.rocks.add(r);
   }
 }

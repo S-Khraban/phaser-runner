@@ -7,7 +7,7 @@ export function createCameraFollow(scene, { height }) {
 
   return {
     update(playerX, viewportWidth) {
-      const targetScrollX = playerX - viewportWidth * (2 / 3);
+      const targetScrollX = playerX - viewportWidth * (1 / 2);
       maxScrollX = Math.max(maxScrollX, targetScrollX);
       cam.scrollX = maxScrollX;
 
