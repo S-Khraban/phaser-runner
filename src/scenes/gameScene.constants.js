@@ -41,6 +41,10 @@ export const ASSETS = {
       KEY: 'box',
       SRC: 'box.png',
     },
+    AXE: {
+      KEY: 'axe',
+      SRC: 'axe.png',
+    },
   },
 
   WORLD: {
