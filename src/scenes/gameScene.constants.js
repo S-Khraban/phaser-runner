@@ -112,18 +112,6 @@ export const ASSETS = {
       FPS: 10,
     },
 
-    PUSH_ANIM: {
-      KEY: 'player-push-anim',
-      SRC: 'player-push-animation.png',
-      FRAME_WIDTH: 50,
-      FRAME_HEIGHT: 50,
-      FRAMES: 8,
-      ANIM_KEY: 'player_push',
-      FPS: 10,
-      NO_AXE: { START: 0, END: 3 },
-      AXE: { START: 4, END: 7 },
-    },
-
     RUN_ANIM: {
       KEY: 'player-run-anim',
       SRC: 'player-run-animation.png',

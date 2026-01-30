@@ -30,6 +30,7 @@ import { bindPickaxeBreak } from './gameScene.bindings.js';
 import { destroyBoxWithExplosion } from '../entities/spawnExplosion.js';
 
 import { spawnIdlePlayer } from '../entities/spawnIdlePlayer.js';
+import { createPlayerRunAnim } from '../anims/playerRun.anim.js';
 
 export default class GameScene extends Phaser.Scene {
   preload() {
@@ -76,6 +77,8 @@ export default class GameScene extends Phaser.Scene {
         repeat: -1,
       });
     }
+
+    createPlayerRunAnim(this);
 
     const parallax = createParallaxStack(this, [
       {

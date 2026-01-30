@@ -8,33 +8,74 @@ const BODY_H = 48;
 const IDLE = ASSETS.PLAYER.IDLE;
 const IDLE_AXE = ASSETS.PLAYER.IDLE_AXE;
 const HOLD = ASSETS.PLAYER.HOLD;
+const HOLD_ANIM = ASSETS.PLAYER.HOLD_ANIM;
 const JUMP = ASSETS.PLAYER.JUMP;
 const JUMP_AXE = ASSETS.PLAYER.JUMP_AXE;
+const RUN = ASSETS.PLAYER.RUN_ANIM;
 
 const HIT = ASSETS.PLAYER?.HIT_AXE ?? ASSETS.PLAYER?.KICK;
 
 function ensureAnims(scene) {
-  if (scene.anims.exists(IDLE.ANIM_KEY)) return;
+  if (!scene.anims.exists(IDLE.ANIM_KEY)) {
+    scene.anims.create({
+      key: IDLE.ANIM_KEY,
+      frames: scene.anims.generateFrameNumbers(IDLE.KEY, {
+        start: 0,
+        end: (IDLE.FRAMES ?? 6) - 1,
+      }),
+      frameRate: IDLE.FPS ?? 6,
+      repeat: -1,
+    });
+  }
 
-  scene.anims.create({
-    key: IDLE.ANIM_KEY,
-    frames: scene.anims.generateFrameNumbers(IDLE.KEY, {
-      start: 0,
-      end: (IDLE.FRAMES ?? 6) - 1,
-    }),
-    frameRate: IDLE.FPS ?? 6,
-    repeat: -1,
-  });
+  if (!scene.anims.exists(IDLE_AXE.ANIM_KEY)) {
+    scene.anims.create({
+      key: IDLE_AXE.ANIM_KEY,
+      frames: scene.anims.generateFrameNumbers(IDLE_AXE.KEY, {
+        start: 0,
+        end: (IDLE_AXE.FRAMES ?? 6) - 1,
+      }),
+      frameRate: IDLE_AXE.FPS ?? 6,
+      repeat: -1,
+    });
+  }
 
-  scene.anims.create({
-    key: IDLE_AXE.ANIM_KEY,
-    frames: scene.anims.generateFrameNumbers(IDLE_AXE.KEY, {
-      start: 0,
-      end: (IDLE_AXE.FRAMES ?? 6) - 1,
-    }),
-    frameRate: IDLE_AXE.FPS ?? 6,
-    repeat: -1,
-  });
+  if (RUN?.KEY && RUN?.ANIM_KEY && !scene.anims.exists(RUN.ANIM_KEY)) {
+    scene.anims.create({
+      key: RUN.ANIM_KEY,
+      frames: scene.anims.generateFrameNumbers(RUN.KEY, {
+        start: RUN.NO_AXE.START,
+        end: RUN.NO_AXE.END,
+      }),
+      frameRate: RUN.FPS ?? 12,
+      repeat: -1,
+    });
+  }
+
+  const runAxeKey = RUN?.ANIM_KEY ? `${RUN.ANIM_KEY}_axe` : null;
+  if (RUN?.KEY && runAxeKey && !scene.anims.exists(runAxeKey)) {
+    scene.anims.create({
+      key: runAxeKey,
+      frames: scene.anims.generateFrameNumbers(RUN.KEY, {
+        start: RUN.AXE.START,
+        end: RUN.AXE.END,
+      }),
+      frameRate: RUN.FPS ?? 12,
+      repeat: -1,
+    });
+  }
+
+  if (HOLD_ANIM?.KEY && HOLD_ANIM?.ANIM_KEY && !scene.anims.exists(HOLD_ANIM.ANIM_KEY)) {
+    scene.anims.create({
+      key: HOLD_ANIM.ANIM_KEY,
+      frames: scene.anims.generateFrameNumbers(HOLD_ANIM.KEY, {
+        start: 0,
+        end: (HOLD_ANIM.FRAMES ?? 4) - 1,
+      }),
+      frameRate: HOLD_ANIM.FPS ?? 8,
+      repeat: -1,
+    });
+  }
 
   if (HIT?.KEY) {
     ensurePlayerPickaxeHitAnim(scene, HIT.KEY);
@@ -59,19 +100,40 @@ function isAirborne(player) {
   return !b.blocked?.down && !b.touching?.down;
 }
 
-function applyView(player) {
+function isRunning(player) {
+  const vx = player?.body?.velocity?.x ?? 0;
+  return Math.abs(vx) > 10;
+}
+
+function applyView(scene, player) {
   const bodyView = player?.getData?.('bodyView');
   if (!bodyView) return;
 
-  if (bodyView.anims?.isPlaying && bodyView.anims?.currentAnim?.key === 'player:pickaxe-hit') {
+  if (
+    bodyView.anims?.isPlaying &&
+    bodyView.anims?.currentAnim?.key === 'player:pickaxe-hit'
+  ) {
     return;
   }
 
   const carrying = isCarrying(player);
   const airborne = isAirborne(player);
+  const running = isRunning(player);
   const axe = hasPickaxe(player);
 
   if (carrying) {
+    if (running && HOLD_ANIM?.KEY && HOLD_ANIM?.ANIM_KEY) {
+      if (bodyView.texture?.key !== HOLD_ANIM.KEY) {
+        bodyView.anims?.stop?.();
+        bodyView.setTexture(HOLD_ANIM.KEY);
+        bodyView.setFrame?.(0);
+      }
+      if (bodyView.anims?.currentAnim?.key !== HOLD_ANIM.ANIM_KEY) {
+        bodyView.play(HOLD_ANIM.ANIM_KEY, true);
+      }
+      return;
+    }
+
     bodyView.anims?.stop?.();
     bodyView.setTexture(HOLD.KEY);
     bodyView.setFrame?.(0);
@@ -82,6 +144,21 @@ function applyView(player) {
     bodyView.anims?.stop?.();
     bodyView.setTexture(axe ? JUMP_AXE.KEY : JUMP.KEY);
     bodyView.setFrame?.(0);
+    return;
+  }
+
+  if (running && RUN?.KEY && RUN?.ANIM_KEY) {
+    const runKey = axe ? `${RUN.ANIM_KEY}_axe` : RUN.ANIM_KEY;
+
+    if (bodyView.texture?.key !== RUN.KEY) {
+      bodyView.anims?.stop?.();
+      bodyView.setTexture(RUN.KEY);
+      bodyView.setFrame?.(0);
+    }
+
+    if (bodyView.anims?.currentAnim?.key !== runKey) {
+      bodyView.play(runKey, true);
+    }
     return;
   }
 
@@ -131,7 +208,7 @@ export function spawnIdlePlayer(scene, x, y) {
     const facing = getFacing(player);
     v.setFlipX(facing === -1);
 
-    applyView(player);
+    applyView(scene, player);
   };
 
   player.updateView();
