@@ -1,10 +1,13 @@
 export function spawnCoin(scene, items, x, y) {
-  const coin = scene.add.rectangle(x, y, 20, 22, 0xffd34a);
-  scene.physics.add.existing(coin, true);
+  const coin = scene.physics.add.staticSprite(x, y, 'coin');
+
+  coin.play('coin-spin');
 
   coin.setDataEnabled();
   coin.setData('type', 'coin');
 
   items.add(coin);
+  items.refresh();
+
   return coin;
 }

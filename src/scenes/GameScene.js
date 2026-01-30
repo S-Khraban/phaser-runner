@@ -42,10 +42,20 @@ export default class GameScene extends Phaser.Scene {
     this.load.setBaseURL(baseUrl);
 
     Object.values(ASSETS).forEach((group) => {
-      Object.values(group).forEach(({ KEY, SRC }) => {
-        if (!this.textures.exists(KEY)) {
-          this.load.image(KEY, SRC);
+      Object.values(group).forEach((asset) => {
+        const { KEY, SRC, FRAME_WIDTH, FRAME_HEIGHT } = asset;
+
+        if (this.textures.exists(KEY)) return;
+
+        if (FRAME_WIDTH && FRAME_HEIGHT) {
+          this.load.spritesheet(KEY, SRC, {
+            frameWidth: FRAME_WIDTH,
+            frameHeight: FRAME_HEIGHT,
+          });
+          return;
         }
+
+        this.load.image(KEY, SRC);
       });
     });
   }
@@ -53,6 +63,20 @@ export default class GameScene extends Phaser.Scene {
   create() {
     const { height } = this.scale;
     this.physics.world.setBounds(0, 0, 999999, height);
+
+    if (!this.anims.exists('coin-spin') && ASSETS.ITEMS?.COIN) {
+      const coin = ASSETS.ITEMS.COIN;
+
+      this.anims.create({
+        key: 'coin-spin',
+        frames: this.anims.generateFrameNumbers(coin.KEY, {
+          start: 0,
+          end: (coin.FRAMES ?? 8) - 1,
+        }),
+        frameRate: 12,
+        repeat: -1,
+      });
+    }
 
     const parallax = createParallaxBg(this, {
       key: ASSETS.BACKGROUND.CAVE.KEY,

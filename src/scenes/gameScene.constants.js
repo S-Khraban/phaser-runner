@@ -65,6 +65,16 @@ export const ASSETS = {
     },
   },
 
+  ITEMS: {
+    COIN: {
+      KEY: 'coin',
+      SRC: 'coin-animation.png',
+      FRAME_WIDTH: 24,
+      FRAME_HEIGHT: 24,
+      FRAMES: 8,
+    },
+  },
+
   UI: {
     FAVICON: {
       KEY: 'favicon',
