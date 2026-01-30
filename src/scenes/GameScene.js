@@ -1,7 +1,7 @@
+// src/scenes/GameScene.js
 import Phaser from 'phaser';
 import { LevelStream } from '../systems/LevelStream.js';
 import { createControls } from '../input/createControls.js';
-import { createPlayer } from '../entities/createPlayer.js';
 import { createHud } from '../ui/createHud.js';
 import { createBoxCarrySystem } from '../systems/boxCarrySystem.js';
 import { createCameraFollow } from '../systems/cameraFollow.js';
@@ -28,6 +28,8 @@ import { createRespawnBox, getNearestBoxInFront } from './gameScene.helpers.js';
 import { spawnCoinFromBox } from '../entities/spawnCoinFromBox.js';
 import { bindPickaxeBreak } from './gameScene.bindings.js';
 import { destroyBoxWithExplosion } from '../entities/spawnExplosion.js';
+
+import { spawnIdlePlayer } from '../entities/spawnIdlePlayer.js';
 
 export default class GameScene extends Phaser.Scene {
   preload() {
@@ -98,13 +100,15 @@ export default class GameScene extends Phaser.Scene {
       rocks: this.physics.add.staticGroup(),
     };
 
-    const player = createPlayer(this, PLAYER_SPAWN);
+    const player = spawnIdlePlayer(this, PLAYER_SPAWN.x, PLAYER_SPAWN.y);
     player.setDataEnabled();
     if (player.getData('facing') == null) player.setData('facing', 1);
 
     const controls = createControls(this);
     const hud = createHud(this);
     player.setData('hasPickaxe', hud.hasPickaxe());
+    player.setData('isCarrying', false);
+    player.updateView?.();
 
     const stream = new LevelStream(
       this,
@@ -128,7 +132,9 @@ export default class GameScene extends Phaser.Scene {
     const onPlayerDeath = () => {
       hud.setPickaxeDurability(0);
       player.setData('hasPickaxe', false);
-      boxCarry?.drop?.();
+      player.setData('isCarrying', false);
+      boxCarry?.reset?.();
+      player.updateView?.();
     };
 
     const respawn = createRespawnSystem(
@@ -214,6 +220,7 @@ export default class GameScene extends Phaser.Scene {
     if (!used) return;
 
     this._player.setData('hasPickaxe', this._hud.hasPickaxe());
+    this._player.updateView?.();
 
     spawnCoinFromBox(this, this._g.items, this._player, box, BREAK);
     destroyBoxWithExplosion(this, box);
@@ -233,6 +240,7 @@ export default class GameScene extends Phaser.Scene {
     else if (vx > 1) this._player.setData('facing', 1);
     else this._player.setData('facing', prevFacing);
 
+    this._player?.updateView?.();
     this._playerView?.update?.();
 
     const scrollX = this._cameraFollow.update(this._player.x, this.scale.width);

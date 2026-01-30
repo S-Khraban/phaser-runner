@@ -1,3 +1,4 @@
+// src/entities/playerView.js
 export function createPlayerView(scene, player) {
   const PICKAXE = {
     KEY: 'axe',
@@ -21,7 +22,7 @@ export function createPlayerView(scene, player) {
   );
   pickaxeView.setOrigin(0.5, 1);
   pickaxeView.setScale(PICKAXE.SCALE);
-  pickaxeView.setDepth(10);
+  pickaxeView.setDepth(20);
   pickaxeView.angle = PICKAXE.BASE_ANGLE;
 
   const nose = scene.add.circle(
@@ -30,7 +31,7 @@ export function createPlayerView(scene, player) {
     NOSE.R,
     NOSE.COLOR
   );
-  nose.setDepth(10);
+  nose.setDepth(20);
 
   let swingTween = null;
 
@@ -42,13 +43,18 @@ export function createPlayerView(scene, player) {
     return !!player?.getData?.('hasPickaxe');
   }
 
+  function isCarrying() {
+    return !!player?.getData?.('isCarrying');
+  }
+
   function isVisible() {
-    return !!(player && player.active && player.visible);
+    const body = player?.getData?.('bodyView');
+    return !!(body && body.active && body.visible);
   }
 
   function swingPickaxe() {
     if (!pickaxeView) return;
-    if (!hasPickaxe() || !isVisible()) return;
+    if (!hasPickaxe() || !isVisible() || isCarrying()) return;
 
     if (swingTween) {
       swingTween.stop();
@@ -76,6 +82,7 @@ export function createPlayerView(scene, player) {
     const facing = getFacing();
     const visible = isVisible();
     const pickaxe = hasPickaxe();
+    const carrying = isCarrying();
 
     nose.setVisible(visible);
     if (visible) {
@@ -85,13 +92,20 @@ export function createPlayerView(scene, player) {
       );
     }
 
-    pickaxeView.setVisible(visible && pickaxe);
-    if (visible && pickaxe) {
+    if (carrying && swingTween) {
+      swingTween.stop();
+      swingTween = null;
+      pickaxeView.angle = PICKAXE.BASE_ANGLE;
+    }
+
+    const showPickaxe = visible && pickaxe && !carrying;
+
+    pickaxeView.setVisible(showPickaxe);
+    if (showPickaxe) {
       pickaxeView.setPosition(
         player.x + facing * PICKAXE.OFFSET_X,
         player.y + PICKAXE.OFFSET_Y
       );
-
       pickaxeView.scaleX = facing * Math.abs(PICKAXE.SCALE);
       if (!swingTween) pickaxeView.angle = PICKAXE.BASE_ANGLE;
     }

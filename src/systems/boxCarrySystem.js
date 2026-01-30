@@ -1,3 +1,4 @@
+// src/systems/boxCarrySystem.js
 import Phaser from 'phaser';
 
 export function createBoxCarrySystem(scene, { player, boxes, controls }) {
@@ -29,9 +30,24 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
     return (target.x - player.x) * f > 0;
   }
 
+  function setCarryState(next) {
+    isCarrying = !!next;
+    player?.setData?.('isCarrying', isCarrying);
+    player?.updateView?.();
+  }
+
   function clearCarry() {
-    isCarrying = false;
+    setCarryState(false);
     carriedBox = null;
+  }
+
+  function hardResetCarry() {
+    if (carriedBox?.active && carriedBox?.body) {
+      carriedBox.body.enable = true;
+      carriedBox.body.allowGravity = true;
+      carriedBox.body.setVelocity(0, 0);
+    }
+    clearCarry();
   }
 
   function getPickupRect() {
@@ -59,17 +75,13 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
       const box = carriedBox;
 
       if (!box?.active || !box?.body) {
-        clearCarry();
+        hardResetCarry();
         return;
       }
 
-      clearCarry();
-
-      box.body.enable = true;
-      box.body.allowGravity = true;
+      hardResetCarry();
 
       const dir = getFacing();
-
       box.body.setVelocity(dir * throwVX, throwVY);
       return;
     }
@@ -97,7 +109,7 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
 
     if (!target?.body) return;
 
-    isCarrying = true;
+    setCarryState(true);
     carriedBox = target;
 
     target.body.setVelocity(0, 0);
@@ -144,6 +156,8 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
     return player.y - pH / 2 - bH / 2;
   }
 
+  if (player?.getData?.('isCarrying') == null) player?.setData?.('isCarrying', false);
+
   return {
     update() {
       if (controls.actionJustDown()) {
@@ -152,7 +166,7 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
 
       if (isCarrying && carriedBox) {
         if (!carriedBox?.active) {
-          clearCarry();
+          hardResetCarry();
           return;
         }
 
@@ -176,16 +190,14 @@ export function createBoxCarrySystem(scene, { player, boxes, controls }) {
       return isCarrying;
     },
     drop() {
-      if (!isCarrying || !carriedBox) return;
-
-      const box = carriedBox;
-      clearCarry();
-
-      if (!box?.active || !box?.body) return;
-
-      box.body.enable = true;
-      box.body.allowGravity = true;
-      box.body.setVelocity(0, 0);
+      if (!isCarrying && !carriedBox) {
+        setCarryState(false);
+        return;
+      }
+      hardResetCarry();
+    },
+    reset() {
+      hardResetCarry();
     },
   };
 }

@@ -1,5 +1,5 @@
 export function createPlayer(scene, { x, y }) {
-  const player = scene.add.rectangle(x, y, 32, 48, 0x4aa3ff);
+  const player = scene.add.rectangle(x, y, 40, 50, 0x4aa3ff);
   scene.physics.add.existing(player);
 
   player.body.setCollideWorldBounds(false);

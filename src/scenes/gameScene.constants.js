@@ -53,6 +53,82 @@ export const ASSETS = {
       KEY: 'axe',
       SRC: 'axe.png',
     },
+
+    IDLE: {
+      KEY: 'player-idle',
+      SRC: 'player-idle-animation.png',
+      FRAME_WIDTH: 50,
+      FRAME_HEIGHT: 50,
+      FRAMES: 6,
+      ANIM_KEY: 'player_idle',
+      FPS: 2,
+    },
+    IDLE_AXE: {
+      KEY: 'player-idle-axe',
+      SRC: 'player-idle-axe-animation.png',
+      FRAME_WIDTH: 50,
+      FRAME_HEIGHT: 50,
+      FRAMES: 6,
+      ANIM_KEY: 'player_idle_axe',
+      FPS: 2,
+    },
+
+    JUMP: {
+      KEY: 'player-jump',
+      SRC: 'player-jump.png',
+    },
+    JUMP_AXE: {
+      KEY: 'player-jump-axe',
+      SRC: 'player-jump-axe.png',
+    },
+
+    HOLD: {
+      KEY: 'player-hold',
+      SRC: 'player-hold.png',
+    },
+    HOLD_ANIM: {
+      KEY: 'player-hold-anim',
+      SRC: 'player-hold-animation.png',
+      FRAME_WIDTH: 50,
+      FRAME_HEIGHT: 50,
+      FRAMES: 4,
+      ANIM_KEY: 'player_hold_walk',
+      FPS: 8,
+    },
+
+    KICK_ANIM: {
+      KEY: 'player-kick-anim',
+      SRC: 'player-kick-animation.png',
+      FRAME_WIDTH: 50,
+      FRAME_HEIGHT: 50,
+      FRAMES: 2,
+      ANIM_KEY: 'player_kick',
+      FPS: 10,
+    },
+
+    PUSH_ANIM: {
+      KEY: 'player-push-anim',
+      SRC: 'player-push-animation.png',
+      FRAME_WIDTH: 50,
+      FRAME_HEIGHT: 50,
+      FRAMES: 8,
+      ANIM_KEY: 'player_push',
+      FPS: 10,
+      NO_AXE: { START: 0, END: 3 },
+      AXE: { START: 4, END: 7 },
+    },
+
+    RUN_ANIM: {
+      KEY: 'player-run-anim',
+      SRC: 'player-run-animation.png',
+      FRAME_WIDTH: 50,
+      FRAME_HEIGHT: 50,
+      FRAMES: 8,
+      ANIM_KEY: 'player_run',
+      FPS: 12,
+      NO_AXE: { START: 0, END: 3 },
+      AXE: { START: 4, END: 7 },
+    },
   },
 
   WORLD: {

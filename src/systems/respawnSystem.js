@@ -16,7 +16,9 @@ export function createRespawnSystem(
 
   function onDeath() {
     player?.setData?.('hasPickaxe', false);
+    player?.setData?.('isCarrying', false);
     boxCarry?.drop?.();
+    player?.updateView?.();
     extraOnDeath?.();
   }
 
@@ -72,6 +74,7 @@ export function createRespawnSystem(
 
     player.setPosition(pos.x, pos.y);
     player.body?.setVelocity?.(0, 0);
+    player?.updateView?.();
   }
 
   return {
