@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { ASSETS } from '../scenes/gameScene.constants.js';
+import { ensurePlayerPickaxeHitAnim } from '../anims/playerPickaxeHit.anim.js';
 
 const BODY_W = 32;
 const BODY_H = 48;
@@ -9,6 +10,8 @@ const IDLE_AXE = ASSETS.PLAYER.IDLE_AXE;
 const HOLD = ASSETS.PLAYER.HOLD;
 const JUMP = ASSETS.PLAYER.JUMP;
 const JUMP_AXE = ASSETS.PLAYER.JUMP_AXE;
+
+const HIT = ASSETS.PLAYER?.HIT_AXE ?? ASSETS.PLAYER?.KICK;
 
 function ensureAnims(scene) {
   if (scene.anims.exists(IDLE.ANIM_KEY)) return;
@@ -32,6 +35,10 @@ function ensureAnims(scene) {
     frameRate: IDLE_AXE.FPS ?? 6,
     repeat: -1,
   });
+
+  if (HIT?.KEY) {
+    ensurePlayerPickaxeHitAnim(scene, HIT.KEY);
+  }
 }
 
 function getFacing(player) {
@@ -55,6 +62,10 @@ function isAirborne(player) {
 function applyView(player) {
   const bodyView = player?.getData?.('bodyView');
   if (!bodyView) return;
+
+  if (bodyView.anims?.isPlaying && bodyView.anims?.currentAnim?.key === 'player:pickaxe-hit') {
+    return;
+  }
 
   const carrying = isCarrying(player);
   const airborne = isAirborne(player);

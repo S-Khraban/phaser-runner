@@ -49,10 +49,6 @@ export const ASSETS = {
       KEY: 'box',
       SRC: 'box.png',
     },
-    AXE: {
-      KEY: 'axe',
-      SRC: 'axe.png',
-    },
 
     IDLE: {
       KEY: 'player-idle',
@@ -94,6 +90,16 @@ export const ASSETS = {
       FRAMES: 4,
       ANIM_KEY: 'player_hold_walk',
       FPS: 8,
+    },
+
+    PICKAXE_HIT_ANIM: {
+      KEY: 'player-pickaxe-hit-anim',
+      SRC: 'player-kick-animation.png',
+      FRAME_WIDTH: 50,
+      FRAME_HEIGHT: 50,
+      FRAMES: 2,
+      ANIM_KEY: 'player:pickaxe-hit',
+      FPS: 12,
     },
 
     KICK_ANIM: {

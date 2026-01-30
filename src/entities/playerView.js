@@ -1,29 +1,12 @@
-// src/entities/playerView.js
-export function createPlayerView(scene, player) {
-  const PICKAXE = {
-    KEY: 'axe',
-    OFFSET_X: 10,
-    OFFSET_Y: 5,
-    SCALE: 0.05,
-    BASE_ANGLE: 45,
-  };
+import { ensurePlayerPickaxeHitAnim, playPickaxeHitOnce } from '../anims/playerPickaxeHit.anim.js';
 
+export function createPlayerView(scene, player) {
   const NOSE = {
     OFFSET_X: 10,
     OFFSET_Y: -6,
     R: 2,
     COLOR: 0x111111,
   };
-
-  const pickaxeView = scene.add.image(
-    player.x + PICKAXE.OFFSET_X,
-    player.y + PICKAXE.OFFSET_Y,
-    PICKAXE.KEY
-  );
-  pickaxeView.setOrigin(0.5, 1);
-  pickaxeView.setScale(PICKAXE.SCALE);
-  pickaxeView.setDepth(20);
-  pickaxeView.angle = PICKAXE.BASE_ANGLE;
 
   const nose = scene.add.circle(
     player.x + NOSE.OFFSET_X,
@@ -33,7 +16,7 @@ export function createPlayerView(scene, player) {
   );
   nose.setDepth(20);
 
-  let swingTween = null;
+  let isHitting = false;
 
   function getFacing() {
     return player?.getData?.('facing') === -1 ? -1 : 1;
@@ -47,33 +30,30 @@ export function createPlayerView(scene, player) {
     return !!player?.getData?.('isCarrying');
   }
 
-  function isVisible() {
+  function getBodyView() {
     const body = player?.getData?.('bodyView');
-    return !!(body && body.active && body.visible);
+    return body && body.active ? body : null;
+  }
+
+  function isVisible() {
+    const body = getBodyView();
+    return !!(body && body.visible);
   }
 
   function swingPickaxe() {
-    if (!pickaxeView) return;
     if (!hasPickaxe() || !isVisible() || isCarrying()) return;
+    if (isHitting) return;
 
-    if (swingTween) {
-      swingTween.stop();
-      swingTween = null;
-    }
+    const body = getBodyView();
+    if (!body?.anims) return;
 
-    const facing = getFacing();
-    pickaxeView.angle = PICKAXE.BASE_ANGLE;
+    ensurePlayerPickaxeHitAnim(scene);
 
-    const swing = 70;
+    isHitting = true;
 
-    swingTween = scene.tweens.add({
-      targets: pickaxeView,
-      angle: PICKAXE.BASE_ANGLE + swing * facing,
-      duration: 80,
-      yoyo: true,
-      onComplete: () => {
-        if (pickaxeView) pickaxeView.angle = PICKAXE.BASE_ANGLE;
-        swingTween = null;
+    playPickaxeHitOnce(body, {
+      onDone: () => {
+        isHitting = false;
       },
     });
   }
@@ -81,8 +61,6 @@ export function createPlayerView(scene, player) {
   function update() {
     const facing = getFacing();
     const visible = isVisible();
-    const pickaxe = hasPickaxe();
-    const carrying = isCarrying();
 
     nose.setVisible(visible);
     if (visible) {
@@ -92,32 +70,11 @@ export function createPlayerView(scene, player) {
       );
     }
 
-    if (carrying && swingTween) {
-      swingTween.stop();
-      swingTween = null;
-      pickaxeView.angle = PICKAXE.BASE_ANGLE;
-    }
-
-    const showPickaxe = visible && pickaxe && !carrying;
-
-    pickaxeView.setVisible(showPickaxe);
-    if (showPickaxe) {
-      pickaxeView.setPosition(
-        player.x + facing * PICKAXE.OFFSET_X,
-        player.y + PICKAXE.OFFSET_Y
-      );
-      pickaxeView.scaleX = facing * Math.abs(PICKAXE.SCALE);
-      if (!swingTween) pickaxeView.angle = PICKAXE.BASE_ANGLE;
-    }
+    if (isCarrying() && isHitting) isHitting = false;
   }
 
   function destroy() {
-    if (swingTween) {
-      swingTween.stop();
-      swingTween = null;
-    }
     nose?.destroy?.();
-    pickaxeView?.destroy?.();
   }
 
   return {
