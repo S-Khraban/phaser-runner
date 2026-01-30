@@ -1,4 +1,3 @@
-// src/scenes/GameScene.js
 import Phaser from 'phaser';
 import { LevelStream } from '../systems/LevelStream.js';
 import { createControls } from '../input/createControls.js';
@@ -31,9 +30,24 @@ import { destroyBoxWithExplosion } from '../entities/spawnExplosion.js';
 
 import { spawnIdlePlayer } from '../entities/spawnIdlePlayer.js';
 import { createPlayerRunAnim } from '../anims/playerRun.anim.js';
-import { destroyBoxWithExplosion as explodeFx } from '../entities/spawnExplosion.js';
+
+import { createStartModal } from '../ui/startModal.js';
 
 export default class GameScene extends Phaser.Scene {
+  pauseGame() {
+    if (this._isPausedByModal) return;
+
+    this._isPausedByModal = true;
+    this.physics.world.pause();
+
+    this._startModal?.show?.('pause');
+  }
+
+  resumeGame() {
+    this._isPausedByModal = false;
+    this.physics.world.resume();
+  }
+
   preload() {
     const baseUrl =
       typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
@@ -110,7 +124,8 @@ export default class GameScene extends Phaser.Scene {
     if (player.getData('facing') == null) player.setData('facing', 1);
 
     const controls = createControls(this);
-    const hud = createHud(this);
+    const hud = createHud(this, { onPause: () => this.pauseGame() });
+
     player.setData('hasPickaxe', hud.hasPickaxe());
     player.setData('isCarrying', false);
     player.updateView?.();
@@ -222,6 +237,32 @@ export default class GameScene extends Phaser.Scene {
       playerView,
       tryBreakBox: () => this.tryBreakBox(),
     });
+
+    this._isPausedByModal = true;
+    this.physics.world.pause();
+
+    this._startModal = createStartModal(this, {
+      onStart: () => this.resumeGame(),
+      onResume: () => this.resumeGame(),
+    });
+
+    this._startModal.show('start');
+
+    this._onPauseKey = () => this.pauseGame();
+    this.input.keyboard.on('keydown-ESC', this._onPauseKey);
+    this.input.keyboard.on('keydown-BACKSPACE', this._onPauseKey);
+
+    this.events.once('shutdown', () => {
+      this._startModal?.destroy?.();
+      this.input.keyboard.off('keydown-ESC', this._onPauseKey);
+      this.input.keyboard.off('keydown-BACKSPACE', this._onPauseKey);
+    });
+
+    this.events.once('destroy', () => {
+      this._startModal?.destroy?.();
+      this.input.keyboard.off('keydown-ESC', this._onPauseKey);
+      this.input.keyboard.off('keydown-BACKSPACE', this._onPauseKey);
+    });
   }
 
   tryBreakBox() {
@@ -246,6 +287,8 @@ export default class GameScene extends Phaser.Scene {
 
   update() {
     this._parallax?.update?.();
+
+    if (this._isPausedByModal) return;
 
     this._playerMovement.update();
     this._playerJump.update();

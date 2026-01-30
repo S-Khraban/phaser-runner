@@ -1,4 +1,6 @@
-export function createHud(scene) {
+export function createHud(scene, opts = {}) {
+  const { onPause = () => {} } = opts;
+
   let tokens = 0;
 
   const hearts = { current: 3, max: 5 };
@@ -14,10 +16,31 @@ export function createHud(scene) {
     tokensIcon: scene.add.text(16, 16, '🪙', baseTextStyle).setScrollFactor(0),
     tokensValue: scene.add.text(44, 16, '0', baseTextStyle).setScrollFactor(0),
 
+    pauseBtn: null,
+
     heartsRow: [],
     pickaxeIcon: null,
     pickaxeCells: [],
   };
+
+  function ensurePauseBtn() {
+    if (ui.pauseBtn) return;
+
+    const x = scene.scale.width - 16;
+    const y = 16;
+
+    ui.pauseBtn = scene.add
+      .text(x, y, '⏸️', baseTextStyle)
+      .setOrigin(1, 0)
+      .setScrollFactor(0);
+
+    ui.pauseBtn.setInteractive({ useHandCursor: true });
+    ui.pauseBtn.on('pointerdown', () => onPause());
+
+    scene.scale.on('resize', (gs) => {
+      ui.pauseBtn?.setPosition(gs.width - 16, 16);
+    });
+  }
 
   function renderTokens() {
     ui.tokensValue.setText(String(tokens));
@@ -75,6 +98,7 @@ export function createHud(scene) {
     }
   }
 
+  ensurePauseBtn();
   renderTokens();
   renderHearts();
   renderPickaxe();
