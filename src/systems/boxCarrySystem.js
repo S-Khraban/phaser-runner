@@ -1,4 +1,3 @@
-// src/systems/boxCarrySystem.js
 import Phaser from 'phaser';
 
 export function createBoxCarrySystem(scene, { player, boxes, controls }) {

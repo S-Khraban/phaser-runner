@@ -1,4 +1,3 @@
-// src/anims/playerPickaxeHit.anim.js
 import { ASSETS } from '../scenes/gameScene.constants.js';
 
 export const PLAYER_ANIMS = {

@@ -32,27 +32,29 @@ export const PARALLAX = {
   },
 };
 
+const IMG = 'images/';
+
 export const ASSETS = {
   BACKGROUND: {
     CAVE: {
       KEY: 'bg_cave',
-      SRC: 'bg_cave.png',
+      SRC: `${IMG}bg_cave.png`,
     },
     CAVE_BACK: {
       KEY: 'bg_cave_back',
-      SRC: 'bg_cave_back.png',
+      SRC: `${IMG}bg_cave_back.png`,
     },
   },
 
   PLAYER: {
     BOX: {
       KEY: 'box',
-      SRC: 'box.png',
+      SRC: `${IMG}box.png`,
     },
 
     IDLE: {
       KEY: 'player-idle',
-      SRC: 'player-idle-animation.png',
+      SRC: `${IMG}player-idle-animation.png`,
       FRAME_WIDTH: 50,
       FRAME_HEIGHT: 50,
       FRAMES: 6,
@@ -61,7 +63,7 @@ export const ASSETS = {
     },
     IDLE_AXE: {
       KEY: 'player-idle-axe',
-      SRC: 'player-idle-axe-animation.png',
+      SRC: `${IMG}player-idle-axe-animation.png`,
       FRAME_WIDTH: 50,
       FRAME_HEIGHT: 50,
       FRAMES: 6,
@@ -71,20 +73,20 @@ export const ASSETS = {
 
     JUMP: {
       KEY: 'player-jump',
-      SRC: 'player-jump.png',
+      SRC: `${IMG}player-jump.png`,
     },
     JUMP_AXE: {
       KEY: 'player-jump-axe',
-      SRC: 'player-jump-axe.png',
+      SRC: `${IMG}player-jump-axe.png`,
     },
 
     HOLD: {
       KEY: 'player-hold',
-      SRC: 'player-hold.png',
+      SRC: `${IMG}player-hold.png`,
     },
     HOLD_ANIM: {
       KEY: 'player-hold-anim',
-      SRC: 'player-hold-animation.png',
+      SRC: `${IMG}player-hold-animation.png`,
       FRAME_WIDTH: 50,
       FRAME_HEIGHT: 50,
       FRAMES: 4,
@@ -94,7 +96,7 @@ export const ASSETS = {
 
     PICKAXE_HIT_ANIM: {
       KEY: 'player-pickaxe-hit-anim',
-      SRC: 'player-kick-animation.png',
+      SRC: `${IMG}player-kick-animation.png`,
       FRAME_WIDTH: 50,
       FRAME_HEIGHT: 50,
       FRAMES: 2,
@@ -104,7 +106,7 @@ export const ASSETS = {
 
     KICK_ANIM: {
       KEY: 'player-kick-anim',
-      SRC: 'player-kick-animation.png',
+      SRC: `${IMG}player-kick-animation.png`,
       FRAME_WIDTH: 50,
       FRAME_HEIGHT: 50,
       FRAMES: 2,
@@ -114,7 +116,7 @@ export const ASSETS = {
 
     RUN_ANIM: {
       KEY: 'player-run-anim',
-      SRC: 'player-run-animation.png',
+      SRC: `${IMG}player-run-animation.png`,
       FRAME_WIDTH: 50,
       FRAME_HEIGHT: 50,
       FRAMES: 8,
@@ -128,25 +130,25 @@ export const ASSETS = {
   WORLD: {
     PLATFORM: {
       KEY: 'platform',
-      SRC: 'platform.png',
+      SRC: `${IMG}platform.png`,
     },
   },
 
   OBSTACLES: {
     ROCK: {
       KEY: 'rock',
-      SRC: 'rock.png',
+      SRC: `${IMG}rock.png`,
     },
     STALACTITE: {
       KEY: 'stalactite',
-      SRC: 'staloktut.png',
+      SRC: `${IMG}staloktut.png`,
     },
   },
 
   ITEMS: {
     COIN: {
       KEY: 'coin',
-      SRC: 'coin-animation.png',
+      SRC: `${IMG}coin-animation.png`,
       FRAME_WIDTH: 24,
       FRAME_HEIGHT: 24,
       FRAMES: 8,
@@ -156,7 +158,7 @@ export const ASSETS = {
   EFFECTS: {
     EXPLOSION: {
       KEY: 'explosion',
-      SRC: 'explosion.png',
+      SRC: `${IMG}explosion.png`,
       FRAME_WIDTH: 50,
       FRAME_HEIGHT: 50,
       FRAMES: 5,
@@ -166,11 +168,11 @@ export const ASSETS = {
   UI: {
     FAVICON: {
       KEY: 'favicon',
-      SRC: 'favicon.png',
+      SRC: `${IMG}favicon.png`,
     },
     LOGO: {
       KEY: 'vite',
-      SRC: 'vite.svg',
+      SRC: `${IMG}vite.svg`,
     },
   },
 };

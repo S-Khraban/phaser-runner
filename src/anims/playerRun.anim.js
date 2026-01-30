@@ -1,4 +1,3 @@
-// src/anims/playerRun.anim.js
 import { ASSETS } from '../scenes/gameScene.constants.js';
 
 export function getPlayerRunAnimKey(hasAxe) {
