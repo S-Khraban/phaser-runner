@@ -2,10 +2,11 @@ export const START_MODAL = {
   layout: {
     width: 720,
     padding: 22,
-    panelMaxH: 520,
+    panelMaxH: 560,
     panelHFactor: 0.9,
     topOffset: 52,
     gapAfterRules: 18,
+    scoreOffsetFromButtons: 18,
   },
 
   colors: {
@@ -40,11 +41,17 @@ export const START_MODAL = {
       fontSize: '20px',
       color: '#ffffff',
     },
+    score: {
+      fontFamily: 'Arial',
+      fontSize: '16px',
+      color: '#ffffff',
+    },
   },
 
   button: {
     w: 220,
     h: 52,
+    gap: 20,
   },
 
   depth: 10_000,

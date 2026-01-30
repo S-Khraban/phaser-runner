@@ -36,16 +36,39 @@ import { createStartModal } from '../ui/startModal.js';
 export default class GameScene extends Phaser.Scene {
   pauseGame() {
     if (this._isPausedByModal) return;
+    if (this._isGameOver) return;
 
     this._isPausedByModal = true;
     this.physics.world.pause();
 
-    this._startModal?.show?.('pause');
+    const score = this._hud?.getTokens?.() ?? 0;
+    this._startModalMode = 'pause';
+    this._startModal?.show?.('pause', { score });
   }
 
   resumeGame() {
+    if (this._isGameOver) return;
+
     this._isPausedByModal = false;
     this.physics.world.resume();
+  }
+
+  restartGame() {
+    this.scene.restart();
+  }
+
+  gameOver() {
+    if (this._isGameOver) return;
+
+    this._isGameOver = true;
+    this._isPausedByModal = true;
+
+    this.physics.world.pause();
+
+    this._startModalMode = 'gameover';
+
+    const score = this._hud?.getTokens?.() ?? 0;
+    this._startModal?.show?.('gameover', { score });
   }
 
   preload() {
@@ -78,6 +101,10 @@ export default class GameScene extends Phaser.Scene {
   create() {
     const { height } = this.scale;
     this.physics.world.setBounds(0, 0, 999999, height);
+
+    this._isGameOver = false;
+    this._isPausedByModal = false;
+    this._startModalMode = 'start';
 
     if (!this.anims.exists('coin-spin') && ASSETS.ITEMS?.COIN) {
       const coin = ASSETS.ITEMS.COIN;
@@ -126,6 +153,10 @@ export default class GameScene extends Phaser.Scene {
     const controls = createControls(this);
     const hud = createHud(this, { onPause: () => this.pauseGame() });
 
+    hud.setHearts(3);
+    hud.setPickaxeDurability(5);
+    hud.resetTokens?.();
+
     player.setData('hasPickaxe', hud.hasPickaxe());
     player.setData('isCarrying', false);
     player.updateView?.();
@@ -150,11 +181,19 @@ export default class GameScene extends Phaser.Scene {
     });
 
     const onPlayerDeath = () => {
+      if (this._isGameOver) return;
+
+      hud.setHearts(hud.getHearts() - 1);
+
       hud.setPickaxeDurability(0);
       player.setData('hasPickaxe', false);
       player.setData('isCarrying', false);
       boxCarry?.reset?.();
       player.updateView?.();
+
+      if (hud.getHearts() <= 0) {
+        this.gameOver();
+      }
     };
 
     const respawn = createRespawnSystem(
@@ -238,14 +277,20 @@ export default class GameScene extends Phaser.Scene {
       tryBreakBox: () => this.tryBreakBox(),
     });
 
-    this._isPausedByModal = true;
-    this.physics.world.pause();
-
     this._startModal = createStartModal(this, {
-      onStart: () => this.resumeGame(),
+      onStart: () => {
+        if (this._startModalMode === 'start') {
+          this.resumeGame();
+          return;
+        }
+        this.restartGame();
+      },
       onResume: () => this.resumeGame(),
     });
 
+    this._isPausedByModal = true;
+    this.physics.world.pause();
+    this._startModalMode = 'start';
     this._startModal.show('start');
 
     this._onPauseKey = () => this.pauseGame();
