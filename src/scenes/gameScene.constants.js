@@ -75,6 +75,16 @@ export const ASSETS = {
     },
   },
 
+  EFFECTS: {
+    EXPLOSION: {
+      KEY: 'explosion',
+      SRC: 'explosion.png',
+      FRAME_WIDTH: 50,
+      FRAME_HEIGHT: 50,
+      FRAMES: 5,
+    },
+  },
+
   UI: {
     FAVICON: {
       KEY: 'favicon',

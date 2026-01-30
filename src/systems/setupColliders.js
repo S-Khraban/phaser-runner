@@ -1,4 +1,5 @@
 import { spawnCoin } from '../entities/spawnCoin.js';
+import { destroyBoxWithExplosion } from '../entities/spawnExplosion.js';
 
 export function setupColliders(
   scene,
@@ -78,14 +79,7 @@ export function setupColliders(
       box.__hitRock = true;
 
       spawnCoin(scene, items, box.x, box.y - 24);
-
-      const respawnX = scene.cameras.main.scrollX + scene.scale.width + 200;
-      const respawnY = 200;
-
-      box.setPosition(respawnX, respawnY);
-      box.body.setVelocity(0, 0);
-      box.body.allowGravity = true;
-      box.body.enable = true;
+      destroyBoxWithExplosion(scene, box);
 
       scene.time.delayedCall(0, () => {
         if (box && box.body) delete box.__hitRock;

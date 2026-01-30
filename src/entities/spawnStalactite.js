@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { destroyBox } from '../scenes/gameScene.helpers.js';
+import { destroyBoxWithExplosion } from './spawnExplosion.js';
 
 const TEX_KEY = 'stalactite';
 
@@ -138,7 +138,7 @@ function _spawnStalactite(scene, opts = {}) {
 
     dropItem();
 
-    destroyBox(box);
+    destroyBoxWithExplosion(scene, box);
     hideGO(st);
 
     scene.time.delayedCall(hideMsOnBoxHit, () => {});
