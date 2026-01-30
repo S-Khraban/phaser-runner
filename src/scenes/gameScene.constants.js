@@ -165,14 +165,4 @@ export const ASSETS = {
     },
   },
 
-  UI: {
-    FAVICON: {
-      KEY: 'favicon',
-      SRC: `${IMG}favicon.png`,
-    },
-    LOGO: {
-      KEY: 'vite',
-      SRC: `${IMG}vite.svg`,
-    },
-  },
 };
