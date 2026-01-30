@@ -26,6 +26,10 @@ export const PARALLAX = {
     FACTOR: 0.8,
     DEPTH: -1000,
   },
+  CAVE_BACK: {
+    FACTOR: 0.5,
+    DEPTH: -2000,
+  },
 };
 
 export const ASSETS = {
@@ -33,6 +37,10 @@ export const ASSETS = {
     CAVE: {
       KEY: 'bg_cave',
       SRC: 'bg_cave.png',
+    },
+    CAVE_BACK: {
+      KEY: 'bg_cave_back',
+      SRC: 'bg_cave_back.png',
     },
   },
 

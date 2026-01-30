@@ -15,7 +15,7 @@ import { spawnStalactite } from '../entities/spawnStalactite.js';
 import { spawnPickaxe } from '../entities/spawnPickaxe.js';
 import { spawnHeart } from '../entities/spawnHeart.js';
 
-import { createParallaxBg } from '../systems/createParallaxBg.js';
+import { createParallaxStack } from '../systems/createParallaxBg.js';
 
 import {
   PLAYER_SPAWN,
@@ -24,11 +24,8 @@ import {
   ASSETS,
   PARALLAX,
 } from './gameScene.constants.js';
-import {
-  createRespawnBox,
-  getNearestBoxInFront,
-  spawnCoinFromBox,
-} from './gameScene.helpers.js';
+import { createRespawnBox, getNearestBoxInFront } from './gameScene.helpers.js';
+import { spawnCoinFromBox } from '../entities/spawnCoinFromBox.js';
 import { bindPickaxeBreak } from './gameScene.bindings.js';
 import { destroyBoxWithExplosion } from '../entities/spawnExplosion.js';
 
@@ -78,11 +75,18 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    const parallax = createParallaxBg(this, {
-      key: ASSETS.BACKGROUND.CAVE.KEY,
-      factor: PARALLAX.CAVE.FACTOR,
-      depth: PARALLAX.CAVE.DEPTH,
-    });
+    const parallax = createParallaxStack(this, [
+      {
+        key: ASSETS.BACKGROUND.CAVE_BACK.KEY,
+        factor: PARALLAX.CAVE_BACK.FACTOR,
+        depth: PARALLAX.CAVE_BACK.DEPTH,
+      },
+      {
+        key: ASSETS.BACKGROUND.CAVE.KEY,
+        factor: PARALLAX.CAVE.FACTOR,
+        depth: PARALLAX.CAVE.DEPTH,
+      },
+    ]);
 
     this.events.once('shutdown', () => parallax.destroy());
     this.events.once('destroy', () => parallax.destroy());

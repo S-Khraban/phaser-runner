@@ -51,3 +51,21 @@ export function createParallaxBg(
     },
   };
 }
+
+export function createParallaxStack(scene, layers = []) {
+  const list = layers
+    .filter(Boolean)
+    .map((cfg) => createParallaxBg(scene, cfg));
+
+  return {
+    update() {
+      for (const p of list) p.update();
+    },
+    resize() {
+      for (const p of list) p.resize?.();
+    },
+    destroy() {
+      for (const p of list) p.destroy?.();
+    },
+  };
+}
