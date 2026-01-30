@@ -31,6 +31,7 @@ import { destroyBoxWithExplosion } from '../entities/spawnExplosion.js';
 
 import { spawnIdlePlayer } from '../entities/spawnIdlePlayer.js';
 import { createPlayerRunAnim } from '../anims/playerRun.anim.js';
+import { destroyBoxWithExplosion as explodeFx } from '../entities/spawnExplosion.js';
 
 export default class GameScene extends Phaser.Scene {
   preload() {
@@ -101,6 +102,7 @@ export default class GameScene extends Phaser.Scene {
       items: this.physics.add.staticGroup(),
       boxes: this.physics.add.group(),
       rocks: this.physics.add.staticGroup(),
+      stals: this.physics.add.group(),
     };
 
     const player = spawnIdlePlayer(this, PLAYER_SPAWN.x, PLAYER_SPAWN.y);
@@ -145,7 +147,17 @@ export default class GameScene extends Phaser.Scene {
       cameraFollow,
       boxCarry,
       groups.platforms,
-      { onDeath: onPlayerDeath }
+      {
+        onDeath: onPlayerDeath,
+        respawnDelay: 1500,
+        explode: (scene, pos) => {
+          const dummy = scene.add.rectangle(pos.x, pos.y, 1, 1, 0x000000, 0);
+          dummy.setDataEnabled();
+          dummy.setData('view', dummy);
+          destroyBoxWithExplosion(scene, dummy);
+          scene.time.delayedCall(0, () => dummy.destroy());
+        },
+      }
     );
 
     setupColliders(this, {
@@ -156,6 +168,8 @@ export default class GameScene extends Phaser.Scene {
       boxCarry,
       items: groups.items,
       hud,
+      respawn,
+      stals: groups.stals,
     });
 
     const respawnBox = createRespawnBox();
@@ -170,6 +184,7 @@ export default class GameScene extends Phaser.Scene {
         respawnOffset: STAL.RESPAWN_OFFSET,
         boxes: groups.boxes,
         player,
+        group: groups.stals,
         spawnPickaxe: (scene, pos) =>
           spawnPickaxe(scene, { ...pos, group: groups.items }),
         spawnHeart: (scene, pos) =>

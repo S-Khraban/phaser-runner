@@ -3,7 +3,7 @@ import { destroyBoxWithExplosion } from '../entities/spawnExplosion.js';
 
 export function setupColliders(
   scene,
-  { player, platforms, boxes, rocks, boxCarry, items, hud }
+  { player, platforms, boxes, rocks, boxCarry, items, hud, respawn, stals }
 ) {
   scene.physics.add.collider(player, platforms);
   scene.physics.add.collider(boxes, platforms);
@@ -88,4 +88,24 @@ export function setupColliders(
     undefined,
     scene
   );
+
+  if (respawn?.kill && stals) {
+    scene.physics.add.overlap(
+      player,
+      stals,
+      (_p, _s) => {
+        const p = _p?.gameObject ?? _p;
+        if (!p?.active) return;
+        if (p.getData?.('dead')) return;
+
+        respawn.kill({
+          cause: 'stalactite',
+          x: p.x,
+          y: p.y,
+        });
+      },
+      undefined,
+      scene
+    );
+  }
 }

@@ -85,6 +85,7 @@ function _spawnStalactite(scene, opts = {}) {
     respawnPlayer,
     respawnSystem,
     onPlayerDeath,
+    group,
   } = opts;
 
   const sx =
@@ -92,8 +93,11 @@ function _spawnStalactite(scene, opts = {}) {
       ? x
       : Phaser.Math.Between(minXPadding, scene.scale.width - minXPadding);
 
-  const st = scene.physics.add.image(sx, y, TEX_KEY);
+  const st = group ? group.create(sx, y, TEX_KEY) : scene.physics.add.image(sx, y, TEX_KEY);
   st.setOrigin(0.5, 0.5);
+
+  st.setDataEnabled?.();
+  st.setData?.('type', 'stalactite');
 
   const w = Phaser.Math.Between(wMin, wMax);
   const h = Phaser.Math.Between(hMin, hMax);
@@ -101,8 +105,10 @@ function _spawnStalactite(scene, opts = {}) {
   st.body?.setSize?.(w, h, true);
 
   st.setImmovable(true);
-  st.body.allowGravity = false;
+  if (st.body) st.body.allowGravity = false;
   st.setVelocityY(speedY);
+
+  st.__hitPlayer = false;
 
   const doRespawn = () => {
     const nx = Phaser.Math.Between(minXPadding, scene.scale.width - minXPadding);
@@ -114,6 +120,7 @@ function _spawnStalactite(scene, opts = {}) {
 
     showGO(st, nx, STALACTITE_DEFAULTS.y);
     st.setVelocity(0, speedY);
+    st.__hitPlayer = false;
   };
 
   const dropItem = () => {
@@ -149,32 +156,39 @@ function _spawnStalactite(scene, opts = {}) {
   };
 
   const onHitPlayer = () => {
+    if (st.__hitPlayer) return;
+    st.__hitPlayer = true;
+
     hideGO(st);
     if (!player) return;
 
-    if (typeof respawnSystem?.respawn === 'function') {
-      respawnSystem.respawn();
-    } else if (typeof respawnSystem?.respawnNow === 'function') {
-      respawnSystem.respawnNow();
+    const p = player?.gameObject ? player.gameObject : player;
+    if (p?.getData?.('dead')) {
+      scene.time.delayedCall(150, () => doRespawn());
+      return;
+    }
+
+    if (typeof respawnSystem?.kill === 'function') {
+      respawnSystem.kill({ cause: 'stalactite', x: p.x, y: p.y });
     } else {
       onPlayerDeath?.();
 
-      const px0 = player.x;
-      const py0 = player.y;
+      const px0 = p.x;
+      const py0 = p.y;
 
-      player.setActive?.(false);
-      player.setVisible?.(false);
-      if (player.body) player.body.enable = false;
+      p.setActive?.(false);
+      p.setVisible?.(false);
+      if (p.body) p.body.enable = false;
 
       scene.time.delayedCall(respawnDelay, () => {
         if (typeof respawnPlayer === 'function') {
-          respawnPlayer(player);
+          respawnPlayer(p);
         } else {
-          if (player.body) player.body.enable = true;
-          player.setPosition?.(px0 ?? 120, py0 ?? 200);
-          player.setActive?.(true);
-          player.setVisible?.(true);
-          player.body?.setVelocity?.(0, 0);
+          if (p.body) p.body.enable = true;
+          p.setPosition?.(px0 ?? 120, py0 ?? 200);
+          p.setActive?.(true);
+          p.setVisible?.(true);
+          p.body?.setVelocity?.(0, 0);
         }
       });
     }
