@@ -41,12 +41,14 @@ export function setupColliders(
       const t = String(type).toLowerCase();
 
       if (t.includes('heart')) {
+        scene._sfx?.coin?.();
         hud.addHeart();
         it.destroy?.();
         return;
       }
 
       if (t.includes('pickaxe') || t.includes('axe')) {
+        scene._sfx?.coin?.();
         hud.addPickaxe();
         _p?.setData?.('hasPickaxe', hud.hasPickaxe());
         it.destroy?.();
@@ -54,6 +56,7 @@ export function setupColliders(
       }
 
       if (t.includes('coin') || t.includes('token')) {
+        scene._sfx?.coin?.();
         hud.addToken();
         it.destroy?.();
         return;
@@ -78,6 +81,7 @@ export function setupColliders(
 
       box.__hitRock = true;
 
+      scene._sfx?.boom?.();
       spawnCoin(scene, items, box.x, box.y - 24);
       destroyBoxWithExplosion(scene, box);
 
@@ -98,6 +102,7 @@ export function setupColliders(
         if (!p?.active) return;
         if (p.getData?.('dead')) return;
 
+        scene._sfx?.boom?.();
         respawn.kill({
           cause: 'stalactite',
           x: p.x,

@@ -93,7 +93,10 @@ function _spawnStalactite(scene, opts = {}) {
       ? x
       : Phaser.Math.Between(minXPadding, scene.scale.width - minXPadding);
 
-  const st = group ? group.create(sx, y, TEX_KEY) : scene.physics.add.image(sx, y, TEX_KEY);
+  const st = group
+    ? group.create(sx, y, TEX_KEY)
+    : scene.physics.add.image(sx, y, TEX_KEY);
+
   st.setOrigin(0.5, 0.5);
 
   st.setDataEnabled?.();
@@ -142,6 +145,8 @@ function _spawnStalactite(scene, opts = {}) {
 
   const onHitBox = (_st, rawBox) => {
     const box = rawBox?.gameObject ? rawBox.gameObject : rawBox;
+
+    scene._sfx?.boom?.();
 
     dropItem();
 

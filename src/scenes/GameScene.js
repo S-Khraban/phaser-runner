@@ -33,6 +33,13 @@ import { createPlayerRunAnim } from '../anims/playerRun.anim.js';
 
 import { createStartModal } from '../ui/startModal.js';
 
+const SOUND = {
+  MAIN: 'main_theme',
+  COIN: 'coin',
+  BOOM: 'boom',
+  GAMEOVER: 'gameover',
+};
+
 export default class GameScene extends Phaser.Scene {
   pauseGame() {
     if (this._isPausedByModal) return;
@@ -57,6 +64,19 @@ export default class GameScene extends Phaser.Scene {
     this.scene.restart();
   }
 
+  _ensureMusicStarted() {
+    if (this._musicStarted) return;
+    this._musicStarted = true;
+
+    if (this._mainTheme && !this._mainTheme.isPlaying) {
+      this._mainTheme.play();
+    }
+  }
+
+  _stopMusic() {
+    if (this._mainTheme?.isPlaying) this._mainTheme.stop();
+  }
+
   gameOver() {
     if (this._isGameOver) return;
 
@@ -64,6 +84,9 @@ export default class GameScene extends Phaser.Scene {
     this._isPausedByModal = true;
 
     this.physics.world.pause();
+
+    this._stopMusic();
+    this._sfx?.gameover?.();
 
     this._startModalMode = 'gameover';
 
@@ -96,6 +119,11 @@ export default class GameScene extends Phaser.Scene {
         this.load.image(KEY, SRC);
       });
     });
+
+    this.load.audio(SOUND.MAIN, 'sound/main_theme_sound.mp3');
+    this.load.audio(SOUND.COIN, 'sound/coin_sound.mp3');
+    this.load.audio(SOUND.BOOM, 'sound/boom_sound.mp3');
+    this.load.audio(SOUND.GAMEOVER, 'sound/gameover_sound.mp3');
   }
 
   create() {
@@ -105,6 +133,18 @@ export default class GameScene extends Phaser.Scene {
     this._isGameOver = false;
     this._isPausedByModal = false;
     this._startModalMode = 'start';
+    this._musicStarted = false;
+
+    this._mainTheme = this.sound.add(SOUND.MAIN, { loop: true, volume: 0.3 });
+
+    this._sfx = {
+      coin: () => this.sound.play(SOUND.COIN, { volume: 0.7 }),
+      boom: () => this.sound.play(SOUND.BOOM, { volume: 0.85 }),
+      gameover: () => this.sound.play(SOUND.GAMEOVER, { volume: 0.5 }),
+    };
+
+    this.input.once('pointerdown', () => this._ensureMusicStarted());
+    this.input.keyboard.once('keydown', () => this._ensureMusicStarted());
 
     if (!this.anims.exists('coin-spin') && ASSETS.ITEMS?.COIN) {
       const coin = ASSETS.ITEMS.COIN;
@@ -183,6 +223,8 @@ export default class GameScene extends Phaser.Scene {
     const onPlayerDeath = () => {
       if (this._isGameOver) return;
 
+      this._sfx?.boom?.();
+
       hud.setHearts(hud.getHearts() - 1);
 
       hud.setPickaxeDurability(0);
@@ -205,6 +247,8 @@ export default class GameScene extends Phaser.Scene {
         onDeath: onPlayerDeath,
         respawnDelay: 1500,
         explode: (scene, pos) => {
+          this._sfx?.boom?.();
+
           const dummy = scene.add.rectangle(pos.x, pos.y, 1, 1, 0x000000, 0);
           dummy.setDataEnabled();
           dummy.setData('view', dummy);
@@ -279,6 +323,8 @@ export default class GameScene extends Phaser.Scene {
 
     this._startModal = createStartModal(this, {
       onStart: () => {
+        this._ensureMusicStarted();
+
         if (this._startModalMode === 'start') {
           this.resumeGame();
           return;
@@ -298,12 +344,14 @@ export default class GameScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-BACKSPACE', this._onPauseKey);
 
     this.events.once('shutdown', () => {
+      this._stopMusic();
       this._startModal?.destroy?.();
       this.input.keyboard.off('keydown-ESC', this._onPauseKey);
       this.input.keyboard.off('keydown-BACKSPACE', this._onPauseKey);
     });
 
     this.events.once('destroy', () => {
+      this._stopMusic();
       this._startModal?.destroy?.();
       this.input.keyboard.off('keydown-ESC', this._onPauseKey);
       this.input.keyboard.off('keydown-BACKSPACE', this._onPauseKey);
@@ -326,6 +374,7 @@ export default class GameScene extends Phaser.Scene {
     this._player.setData('hasPickaxe', this._hud.hasPickaxe());
     this._player.updateView?.();
 
+    this._sfx?.boom?.();
     spawnCoinFromBox(this, this._g.items, this._player, box, BREAK);
     destroyBoxWithExplosion(this, box);
   }
