@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { destroyBox } from '../scenes/gameScene.helpers.js';
 import { spawnPlatform } from '../entities/spawnPlatform.js';
 import { spawnRock } from '../entities/spawnRock.js';
+import { spawnCoin } from '../entities/spawnCoin.js';
 
 function destroyWithView(go) {
   if (!go) return;
@@ -121,7 +122,7 @@ export class LevelStream {
     }
 
     if (Math.random() < 0.35) {
-      this.spawnToken(cx, topY - 60);
+      spawnCoin(this.scene, this.items, cx, topY - 60);
     }
 
     if (this.canSpawnRock(cx) && Math.random() < this.rockChance) {
@@ -141,16 +142,6 @@ export class LevelStream {
       h: this.platformH,
       texKey: this.platformTexKey,
     });
-  }
-
-  spawnToken(x, y) {
-    const t = this.scene.add.rectangle(x, y, 18, 18, 0xffd34a);
-    this.scene.physics.add.existing(t, true);
-
-    t.setDataEnabled();
-    t.setData('type', 'coin');
-
-    this.items.add(t);
   }
 
   spawnBox(x, y) {
