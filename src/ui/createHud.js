@@ -1,5 +1,5 @@
 export function createHud(scene, opts = {}) {
-  const { onPause = () => {} } = opts;
+  const { onPause = () => {}, onToggleMute = () => false, isMuted = () => false } = opts;
 
   let tokens = 0;
 
@@ -17,28 +17,45 @@ export function createHud(scene, opts = {}) {
     tokensValue: scene.add.text(44, 16, '0', baseTextStyle).setScrollFactor(0),
 
     pauseBtn: null,
+    muteBtn: null,
 
     heartsRow: [],
     pickaxeIcon: null,
     pickaxeCells: [],
   };
 
-  function ensurePauseBtn() {
-    if (ui.pauseBtn) return;
+  function updateMuteIcon() {
+    if (!ui.muteBtn) return;
+    ui.muteBtn.setText(isMuted() ? '🔇' : '🔊');
+  }
 
-    const x = scene.scale.width - 16;
-    const y = 16;
+  function ensureTopButtons() {
+    if (!ui.pauseBtn) {
+      ui.pauseBtn = scene.add
+        .text(scene.scale.width - 16, 16, '⏸️', baseTextStyle)
+        .setOrigin(1, 0)
+        .setScrollFactor(0);
 
-    ui.pauseBtn = scene.add
-      .text(x, y, '⏸️', baseTextStyle)
-      .setOrigin(1, 0)
-      .setScrollFactor(0);
+      ui.pauseBtn.setInteractive({ useHandCursor: true });
+      ui.pauseBtn.on('pointerdown', () => onPause());
+    }
 
-    ui.pauseBtn.setInteractive({ useHandCursor: true });
-    ui.pauseBtn.on('pointerdown', () => onPause());
+    if (!ui.muteBtn) {
+      ui.muteBtn = scene.add
+        .text(scene.scale.width - 56, 16, isMuted() ? '🔇' : '🔊', baseTextStyle)
+        .setOrigin(1, 0)
+        .setScrollFactor(0);
+
+      ui.muteBtn.setInteractive({ useHandCursor: true });
+      ui.muteBtn.on('pointerdown', () => {
+        onToggleMute();
+        updateMuteIcon();
+      });
+    }
 
     scene.scale.on('resize', (gs) => {
       ui.pauseBtn?.setPosition(gs.width - 16, 16);
+      ui.muteBtn?.setPosition(gs.width - 56, 16);
     });
   }
 
@@ -98,12 +115,14 @@ export function createHud(scene, opts = {}) {
     }
   }
 
-  ensurePauseBtn();
+  ensureTopButtons();
   renderTokens();
   renderHearts();
   renderPickaxe();
 
   return {
+    updateMuteIcon,
+
     addToken() {
       tokens += 1;
       renderTokens();

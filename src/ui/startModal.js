@@ -64,6 +64,7 @@ export function createStartModal(scene, opts = {}) {
     '• W⬆️  — jump',
     '• SPACE — pick up / drop box 📦',
     '• SPACE⛏️ Pickaxe — kick / break boxes 💥',
+    '•  🔊🔇— mute| unmute',
   ].join('\n');
 
   const topY = -panelH / 2 + padding + cfg.layout.topOffset;

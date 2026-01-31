@@ -160,7 +160,13 @@ export default class GameScene extends Phaser.Scene {
     if (player.getData('facing') == null) player.setData('facing', 1);
 
     const controls = createControls(this);
-    const hud = createHud(this, { onPause: () => this.pauseGame() });
+
+    const hud = createHud(this, {
+      onPause: () => this.pauseGame(),
+      onToggleMute: () => this._audio?.toggleMute?.(),
+      isMuted: () => this._audio?.isMuted?.() ?? false,
+    });
+    hud.updateMuteIcon?.();
 
     hud.setHearts(3);
     hud.setPickaxeDurability(5);
