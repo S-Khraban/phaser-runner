@@ -1,483 +1,255 @@
-# 🎮 Phaser.js Game Project
+## 🧠 About the Project
 
-This repository is the result of an iterative **2D game development process using Phaser.js**, with a strong focus on **architecture**, **game systems**, **physics**, **animations**, **procedural level generation**, and **clean engineering practices** (Git workflow, refactoring, system isolation).
+This is a **side-scrolling 2D platformer built with Phaser**, where the level is **dynamically generated along the X axis**.
 
-The project evolved step by step: from primitive rectangles and placeholders to fully structured game entities with separated **logic**, **visual representation**, animations, and interactions.
+Gameplay:
+- procedural platforms and obstacles
+- interaction with **boxes** (pick up / carry / throw / push)
+- items: **coin🪙, heart❤️, pickaxe⛏️**
+- hazards: **stalactites**
+- HUD: **pause ⏸️ + mute/unmute 🔇🔊**
+- clear separation of logic and visuals (physics body separate from view)
 
 ---
 
-## 🧠 Project Overview
+## 🔊 Audio & Mute
 
-This is a **side‑scrolling 2D platformer** where:
+The game uses an **Audio Manager** (`src/audio/createAudio.js`):
 
-* the level is generated dynamically along the X axis
-* the player interacts with platforms, boxes, rocks, and hazards
-* collectible items are present (coin, heart, pickaxe)
-* physics‑based interactions are implemented (carrying, throwing, pushing)
-* logic and rendering are clearly separated
+- looping background music
+- SFX: coin / boom / gameover
+- **🔇/🔊 button** next to pause in the HUD
 
-The project is designed not as a demo, but as a **solid foundation for a full‑scale game**.
+Mute/unmute is implemented via:
+
+- `scene.sound.mute = true/false`
+
+This means:
+- base `volume` values are **not modified**
+- music is **not stopped**, only muted/unmuted
+- when unmuted, audio resumes **without restarting** the track
 
 ---
 
 ## 🧩 Architecture
 
-The repository structure reflects the current code organization and enforces separation of responsibilities between animations, entities, systems, UI, input, and scenes.
+The project is organized into folders: **scenes / systems / entities / ui / anims / audio**.
 
-```
+Core principle:
+
+👉 **Logic ≠ View**
+
+- physics body — separate
+- visual representation — separate
+- linked via `setData('view', ...)` (or a stored reference inside the entity)
+
+This allows:
+- swapping sprites without rewriting physics
+- avoiding collider-related bugs
+- animating objects without breaking collisions
+
+---
+
+## 📦 Structure
+
 public/
-├─ images/          # PNG assets (sprites, backgrounds, etc.)
-├─ sound/           # audio assets
+├─ images/ # PNG assets (sprites, backgrounds)
+├─ sound/ # audio
 └─ favicon.png
 
 src/
-├─ anims/           # animation registrations
-│  ├─ playerPickaxeHit.anim.js
-│  └─ playerRun.anim.js
-├─ entities/        # entity spawn / create functions
-│  ├─ createPlayer.js
-│  ├─ playerView.js
-│  ├─ spawnIdlePlayer.js
-│  ├─ spawnPickaxe.js
-│  ├─ spawnPlatform.js
-│  ├─ spawnBox.js
-│  ├─ spawnRock.js
-│  ├─ spawnStalactite.js
-│  ├─ spawnHeart.js
-│  ├─ spawnCoin.js
-│  ├─ spawnCoinFromBox.js
-│  └─ spawnExplosion.js
-├─ input/
-│  └─ createControls.js
-├─ scenes/
-│  ├─ GameScene.js
-│  ├─ gameScene.constants.js
-│  ├─ gameScene.helpers.js
-│  └─ gameScene.bindings.js
-├─ systems/         # core game systems (logic)
-│  ├─ LevelStream.js
-│  ├─ setupColliders.js
-│  ├─ cameraFollow.js
-│  ├─ playerMovement.js
-│  ├─ playerJump.js
-│  ├─ respawnSystem.js
-│  ├─ boxCarrySystem.js
-│  └─ createParallaxBg.js
-├─ ui/
-│  ├─ createHud.js
-│  ├─ startModal.js
-│  └─ startModalStyles.js
+├─ anims/ # animation registration
+├─ audio/ # audio manager and constants
+│ ├─ audio.constants.js
+│ └─ createAudio.js
+├─ entities/ # spawn/create entity functions
+├─ input/ # input creation
+├─ scenes/ # scenes and configs
+├─ systems/ # game systems (logic)
+├─ ui/ # HUD and modals
 ├─ main.js
 └─ style.css
 
 index.html
 package-lock.json
-```
 
-### Core Principle
-
-👉 **Logic ≠ View**
-
-* physics bodies are independent from visuals
-* rendering is handled via separate view objects
-* connections are made through `setData('view', ...)` or explicit references
-
-This approach allows:
-
-* easy sprite replacement
-* stable physics without visual side effects
-* animation without breaking collisions
+yaml
+Копіювати код
 
 ---
 
 ## 🧱 LevelStream — Procedural Generation
 
-The `LevelStream` system is responsible for:
-
-* spawning platforms ahead of the camera
-* placing boxes, rocks, and items
-* enforcing distance and probability rules
-* cleaning up objects behind the camera
-
-### Fixed Issues
-
-* ❌ boxes spawning *inside* platforms
-* ❌ physics bodies collapsing into a single point
-* ❌ incorrect Y positioning
-
-✔️ Current behavior:
-
-* boxes always spawn **on top of platforms**
-* physics bodies have proper dimensions
-* views are synchronized with bodies
+The `LevelStream` system:
+- generates platforms ahead of the camera
+- spawns boxes / rocks / items based on rules
+- cleans up old objects behind the camera
 
 ---
 
-## 🧍 Player
+## 🧍 Player Systems
 
-The player consists of:
-
-* a physics body (rectangle)
-* a separate `playerView`
-
-### Player Systems
-
-* `playerMovement`
-* `playerJump`
-* `cameraFollow`
-* `respawnSystem`
-
-#### Respawn Logic
-
-* detects the nearest valid platform
-* respawns **200px above the platform**
-* resets temporary states (pickaxe, carrying)
+- movement and jump (separate systems)
+- camera follows the player
+- respawn system:
+  - finds the nearest safe platform
+  - spawns the player above the platform
+  - resets states (pickaxe/carry)
 
 ---
 
 ## 📦 Box Carry System
 
-One of the most complex systems in the project.
-
 Features:
+- pick up a box
+- carry it
+- throw with impulse
+- push it
 
-* picking up boxes
-* carrying them
-* throwing with impulse
-* pushing boxes with the shoulder
-
-The system accounts for:
-
-* player facing direction
-* distance checks
-* pickaxe state
-* velocity and mass tuning
-
-Player states are stored via `player.setData()`:
-
-* `isCarrying`
-* `hasPickaxe`
+State stored via `player.setData()`:
+- `isCarrying`
+- `hasPickaxe`
 
 ---
 
-## ⛏ Pickaxe
+## ⛏ Pickaxe / 💥 FX / Items
 
-* implemented as a separate entity
-* uses runtime textures (Graphics → Texture)
-* includes hit animation
-* affects interactions with boxes
-
-The pickaxe has its own view, offset, rotation, and depth handling.
+- pickaxe affects box breaking (durability shown in HUD)
+- coins/hearts/items have correct colliders and spawn offsets
+- box explosion/dust FX use a 24×24 spritesheet (PNG with transparency)
 
 ---
 
-## 💥 Animations
+## 🚀 Run
 
-### Implemented:
+```bash
+npm install
+npm run dev
 
-* box destruction mini‑explosion
-* dust / debris effects (8‑bit, 2D)
-* pickaxe hit animation
-* movement, jump, and push states
+## 🧠 Про проєкт
 
-### Approach
+Це **side-scrolling 2D платформа на Phaser**, де рівень **динамічно генерується по X**.
 
-* single‑row sprite sheets
-* 24×24 frames
-* PNG with transparency
-
----
-
-## 🪙 Coin / ❤️ Heart
-
-* generated via runtime textures using `Graphics`
-* animated spawn behavior
-* controlled spawn offsets
-
-Fixed problems:
-
-* ❌ multiple coins spawning unexpectedly
-* ❌ incorrect Y position
-
-✔️ Current behavior:
-
-* exactly one coin per event
-* predictable spawn height
+Геймплей:
+- процедурні платформи та перешкоди
+- взаємодія з **ящиками** (підняти / нести / кинути / штовхати)
+- предмети: **coin🪙, heart❤️, pickaxe⛏️**
+- небезпеки: **сталактити**
+- HUD: **пауза ⏸️ + mute/unmute 🔇🔊**
+- логіка та візуал розділені (physics body окремо від view)
 
 ---
 
-## 🎥 Camera & Parallax
+## 🔊 Аудіо та Mute
 
-* camera smoothly follows the player
-* parallax background system
-* physics and render synchronization tested
+У грі є **Audio Manager** (`src/audio/createAudio.js`):
 
----
+- фоновий трек (loop)
+- SFX: coin / boom / gameover
+- кнопка **🔇/🔊** біля паузи в HUD
 
-## 🧪 Debugging & Refactoring
+Mute/unmute реалізовано правильно через:
 
-Throughout development:
+- `scene.sound.mute = true/false`
 
-* multiple hard resets of the `main` branch
-* feature work via `develop` branches
-* clean commits executed in a single command block
-* full system rewrites without incremental hacks
-
-This reflects a **deliberate focus on clean Git history and maintainability**.
-
----
-
-## 🛠 Tech Stack
-
-* **Phaser.js**
-* ES Modules
-* Arcade Physics
-* Git / GitHub
-* Procedural generation
-* Runtime textures
-
----
-
-## 🚀 Project Status
-
-The project is in **active development**.
-
-It is not a tutorial sample, but a **scalable base for a complete 2D game**.
-
-## 🧠 Загальна ідея
-
-Це **side‑scrolling 2D платформа**, де:
-
-* рівень генерується динамічно по X
-* гравець взаємодіє з платформами, ящиками, камінням
-* присутні предмети (coin🪙, heart❤️, pickaxe⛏️)
-* реалізовані фізичні взаємодії, перенесення обʼєктів, кидки, штовхання
-* логіка та візуал чітко розділені
-
-Проєкт побудований не як «demo», а як **база для повноцінної гри**.
+Це означає:
+- ми **не змінюємо** базові `volume`
+- музика **не зупиняється**, а просто вимикається/вмикається
+- при unmute звук повертається без “перезапуску” треку
 
 ---
 
 ## 🧩 Архітектура
 
-Структура репозиторію відповідає поточній організації коду (анiмації, сутності, системи, UI, input) і підтримує принцип **розділення логіки та візуалу**.
+Проєкт організований по папках: **scenes / systems / entities / ui / anims / audio**.
 
-```
+Ключовий принцип:
+
+👉 **Logic ≠ View**
+
+- physics body — окремо
+- візуальне відображення — окремо
+- звʼязок через `setData('view', ...)` (або посилання всередині сутності)
+
+Це дозволяє:
+- міняти спрайти без переписування фізики
+- уникати багів з колайдерами
+- анімувати об’єкти без ламання зіткнень
+
+---
+
+## 📦 Структура
+
 public/
-├─ images/          # PNG-асети (спрайти, бекграунди, тощо)
-├─ sound/           # аудіо
+├─ images/ # PNG-асети (спрайти, бекграунди)
+├─ sound/ # аудіо
 └─ favicon.png
 
 src/
-├─ anims/           # реєстрація анімацій гравця
-│  ├─ playerPickaxeHit.anim.js
-│  └─ playerRun.anim.js
-├─ entities/        # spawn/create-функції сутностей
-│  ├─ createPlayer.js
-│  ├─ playerView.js
-│  ├─ spawnIdlePlayer.js
-│  ├─ spawnPickaxe.js
-│  ├─ spawnPlatform.js
-│  ├─ spawnBox.js
-│  ├─ spawnRock.js
-│  ├─ spawnStalactite.js
-│  ├─ spawnHeart.js
-│  ├─ spawnCoin.js
-│  ├─ spawnCoinFromBox.js
-│  └─ spawnExplosion.js
-├─ input/
-│  └─ createControls.js
-├─ scenes/
-│  ├─ GameScene.js
-│  ├─ gameScene.constants.js
-│  ├─ gameScene.helpers.js
-│  └─ gameScene.bindings.js
-├─ systems/         # ігрові системи (логіка)
-│  ├─ LevelStream.js
-│  ├─ setupColliders.js
-│  ├─ cameraFollow.js
-│  ├─ playerMovement.js
-│  ├─ playerJump.js
-│  ├─ respawnSystem.js
-│  ├─ boxCarrySystem.js
-│  └─ createParallaxBg.js
-├─ ui/
-│  ├─ createHud.js
-│  ├─ startModal.js
-│  └─ startModalStyles.js
+├─ anims/ # реєстрація анімацій
+├─ audio/ # аудіо менеджер та константи
+│ ├─ audio.constants.js
+│ └─ createAudio.js
+├─ entities/ # spawn/create-функції сутностей
+├─ input/ # створення контролів
+├─ scenes/ # сцени та конфіги
+├─ systems/ # ігрові системи (логіка)
+├─ ui/ # HUD та модалки
 ├─ main.js
 └─ style.css
 
 index.html
 package-lock.json
-```
 
-### Ключовий принцип
-
-👉 **Logic ≠ View**
-
-* physics body — окремо
-* візуальне відображення — окремо
-* звʼязок через `setData('view', ...)` (або збереження посилання у сутності)
-
-Це дозволяє:
-
-* легко міняти спрайти без переписування фізики
-* уникати багів з колайдерами
-* анімувати об’єкти без ламання зіткнень
+yaml
+Копіювати код
 
 ---
 
 ## 🧱 LevelStream — процедурна генерація
 
-Реалізована система `LevelStream`, яка:
-
-* генерує платформи попереду камери
-* спавнить ящики, каміння, предмети
-* контролює дистанції між обʼєктами
-* очищає старі обʼєкти позаду камери
-
-### Виправлені проблеми
-
-* ❌ ящики зʼявлялись *в середині платформи*
-* ❌ body був "крапочкою"
-* ❌ неправильні Y‑координати
-
-✔️ Тепер:
-
-* ящик **завжди стоїть НА платформі**
-* body має фізичний розмір
-* view синхронізується з body
+Система `LevelStream`:
+- генерує платформи попереду камери
+- спавнить ящики / каміння / предмети з правилами
+- очищає старі обʼєкти позаду камери
 
 ---
 
-## 🧍 Player
+## 🧍 Player Systems
 
-Гравець реалізований як:
-
-* physics‑body (rectangle)
-* окремий `playerView`
-
-### Системи гравця
-
-* `createPlayerMovement`
-* `createPlayerJump`
-* `createCameraFollow`
-* `createRespawnSystem`
-
-#### Respawn logic
-
-* визначення найближчої платформи
-* спавн **вище платформи на 200px**
-* скидання станів (pickaxe, carry)
+- рух та стрибок (окремі системи)
+- камера слідує за гравцем
+- respawn система:
+  - пошук найближчої платформи
+  - спавн вище платформи
+  - скидання станів (pickaxe/carry)
 
 ---
 
 ## 📦 Box Carry System
 
-Одна з найскладніших систем у проєкті.
-
 Можливості:
+- підняття ящика
+- перенесення
+- кидок з імпульсом
+- штовхання
 
-* підняття ящика
-* перенесення
-* кидок з імпульсом
-* штовхання плечем
-
-Враховано:
-
-* напрямок гравця
-* дистанцію
-* наявність кирки
-* фізику маси та швидкості
-
-Стан зберігається через `player.setData()`:
-
-* `isCarrying`
-* `hasPickaxe`
+Стан через `player.setData()`:
+- `isCarrying`
+- `hasPickaxe`
 
 ---
 
-## ⛏ Pickaxe
+## ⛏ Pickaxe / 💥 FX / Items
 
-* окрема сутність
-* runtime‑texture (graphics → texture)
-* анімація удару
-* вплив на взаємодії з ящиками
-
-Pickaxe має власний `view`, offset, angle та depth.
+- кирка впливає на ламання ящиків (durability показується в HUD)
+- монети/серця/предмети мають коректні колайдери та spawn offset
+- вибух/пил для ящика — spritesheet 24×24 (PNG з прозорістю)
 
 ---
 
-## 💥 Анімації
+## 🚀 Запуск
 
-### Реалізовано:
-
-* міні‑вибух ящика
-* пил / крихти (8‑bit, 2D)
-* анімація удару киркою
-* рух, стрибок, штовхання
-
-### Підхід
-
-* sprite‑sheet в одну лінію
-* кадри 24×24
-* PNG з прозорістю
-
----
-
-## 🪙 Coin / ❤️ Heart
-
-* runtime‑textures через `Graphics`
-* анімація появи
-* коректний spawn offset
-
-Було виправлено:
-
-* ❌ монет створювалось забагато
-* ❌ неправильний Y spawn
-
-✔️ Тепер:
-
-* одна монета
-* контрольована позиція
-
----
-
-## 🎥 Camera & Parallax
-
-* камера слідує за гравцем
-* паралакс‑бекграунд
-* перевірка sync з фізикою
-
----
-
-## 🧪 Дебаг і рефакторинг
-
-Протягом розробки:
-
-* десятки хард‑ресетів гілки `main`
-* робота через `develop`
-* чисті коміти «одним блоком команд»
-* повні перебудови систем без коментарів
-
-Це **свідомий підхід до чистоти історії Git**.
-
----
-
-## 🛠 Технології
-
-* **Phaser.js**
-* ES Modules
-* Physics Arcade
-* Git / GitHub
-* Procedural generation
-* Runtime textures
-
----
-
-## 🚀 Статус
-
-Проєкт знаходиться у **активній фазі розробки**.
-
-Це не просто навчальний приклад, а **фундамент для повноцінної гри** з масштабованою архітектурою.
+```bash
+npm install
+npm run dev
