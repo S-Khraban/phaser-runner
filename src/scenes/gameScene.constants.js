@@ -91,7 +91,7 @@ export const ASSETS = {
       FRAME_HEIGHT: 50,
       FRAMES: 4,
       ANIM_KEY: 'player_hold_walk',
-      FPS: 8,
+      FPS: 4,
     },
 
     PICKAXE_HIT_ANIM: {

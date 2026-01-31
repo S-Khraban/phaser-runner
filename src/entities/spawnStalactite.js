@@ -86,6 +86,7 @@ function _spawnStalactite(scene, opts = {}) {
     respawnSystem,
     onPlayerDeath,
     group,
+    sfxBoom,
   } = opts;
 
   const sx =
@@ -146,7 +147,7 @@ function _spawnStalactite(scene, opts = {}) {
   const onHitBox = (_st, rawBox) => {
     const box = rawBox?.gameObject ? rawBox.gameObject : rawBox;
 
-    scene._sfx?.boom?.();
+    sfxBoom?.();
 
     dropItem();
 

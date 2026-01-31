@@ -33,12 +33,7 @@ import { createPlayerRunAnim } from '../anims/playerRun.anim.js';
 
 import { createStartModal } from '../ui/startModal.js';
 
-const SOUND = {
-  MAIN: 'main_theme',
-  COIN: 'coin',
-  BOOM: 'boom',
-  GAMEOVER: 'gameover',
-};
+import { preloadAudio, createAudio } from '../audio/createAudio.js';
 
 export default class GameScene extends Phaser.Scene {
   pauseGame() {
@@ -64,19 +59,6 @@ export default class GameScene extends Phaser.Scene {
     this.scene.restart();
   }
 
-  _ensureMusicStarted() {
-    if (this._musicStarted) return;
-    this._musicStarted = true;
-
-    if (this._mainTheme && !this._mainTheme.isPlaying) {
-      this._mainTheme.play();
-    }
-  }
-
-  _stopMusic() {
-    if (this._mainTheme?.isPlaying) this._mainTheme.stop();
-  }
-
   gameOver() {
     if (this._isGameOver) return;
 
@@ -85,8 +67,8 @@ export default class GameScene extends Phaser.Scene {
 
     this.physics.world.pause();
 
-    this._stopMusic();
-    this._sfx?.gameover?.();
+    this._audio?.stopMusic?.();
+    this._audio?.sfx?.gameover?.();
 
     this._startModalMode = 'gameover';
 
@@ -120,10 +102,7 @@ export default class GameScene extends Phaser.Scene {
       });
     });
 
-    this.load.audio(SOUND.MAIN, 'sound/main_theme_sound.mp3');
-    this.load.audio(SOUND.COIN, 'sound/coin_sound.mp3');
-    this.load.audio(SOUND.BOOM, 'sound/boom_sound.mp3');
-    this.load.audio(SOUND.GAMEOVER, 'sound/gameover_sound.mp3');
+    preloadAudio(this);
   }
 
   create() {
@@ -133,18 +112,8 @@ export default class GameScene extends Phaser.Scene {
     this._isGameOver = false;
     this._isPausedByModal = false;
     this._startModalMode = 'start';
-    this._musicStarted = false;
 
-    this._mainTheme = this.sound.add(SOUND.MAIN, { loop: true, volume: 0.3 });
-
-    this._sfx = {
-      coin: () => this.sound.play(SOUND.COIN, { volume: 0.7 }),
-      boom: () => this.sound.play(SOUND.BOOM, { volume: 0.85 }),
-      gameover: () => this.sound.play(SOUND.GAMEOVER, { volume: 0.5 }),
-    };
-
-    this.input.once('pointerdown', () => this._ensureMusicStarted());
-    this.input.keyboard.once('keydown', () => this._ensureMusicStarted());
+    this._audio = createAudio(this);
 
     if (!this.anims.exists('coin-spin') && ASSETS.ITEMS?.COIN) {
       const coin = ASSETS.ITEMS.COIN;
@@ -223,7 +192,7 @@ export default class GameScene extends Phaser.Scene {
     const onPlayerDeath = () => {
       if (this._isGameOver) return;
 
-      this._sfx?.boom?.();
+      this._audio?.sfx?.boom?.();
 
       hud.setHearts(hud.getHearts() - 1);
 
@@ -247,7 +216,7 @@ export default class GameScene extends Phaser.Scene {
         onDeath: onPlayerDeath,
         respawnDelay: 1500,
         explode: (scene, pos) => {
-          this._sfx?.boom?.();
+          this._audio?.sfx?.boom?.();
 
           const dummy = scene.add.rectangle(pos.x, pos.y, 1, 1, 0x000000, 0);
           dummy.setDataEnabled();
@@ -268,6 +237,7 @@ export default class GameScene extends Phaser.Scene {
       hud,
       respawn,
       stals: groups.stals,
+      audio: this._audio,
     });
 
     const respawnBox = createRespawnBox();
@@ -289,6 +259,7 @@ export default class GameScene extends Phaser.Scene {
           spawnHeart(scene, { ...pos, group: groups.items }),
         respawnBox,
         respawnSystem: respawn,
+        sfxBoom: () => this._audio?.sfx?.boom?.(),
       });
     };
 
@@ -323,7 +294,7 @@ export default class GameScene extends Phaser.Scene {
 
     this._startModal = createStartModal(this, {
       onStart: () => {
-        this._ensureMusicStarted();
+        this._audio?.ensureMusicStarted?.();
 
         if (this._startModalMode === 'start') {
           this.resumeGame();
@@ -344,14 +315,14 @@ export default class GameScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-BACKSPACE', this._onPauseKey);
 
     this.events.once('shutdown', () => {
-      this._stopMusic();
+      this._audio?.destroy?.();
       this._startModal?.destroy?.();
       this.input.keyboard.off('keydown-ESC', this._onPauseKey);
       this.input.keyboard.off('keydown-BACKSPACE', this._onPauseKey);
     });
 
     this.events.once('destroy', () => {
-      this._stopMusic();
+      this._audio?.destroy?.();
       this._startModal?.destroy?.();
       this.input.keyboard.off('keydown-ESC', this._onPauseKey);
       this.input.keyboard.off('keydown-BACKSPACE', this._onPauseKey);
@@ -374,7 +345,7 @@ export default class GameScene extends Phaser.Scene {
     this._player.setData('hasPickaxe', this._hud.hasPickaxe());
     this._player.updateView?.();
 
-    this._sfx?.boom?.();
+    this._audio?.sfx?.boom?.();
     spawnCoinFromBox(this, this._g.items, this._player, box, BREAK);
     destroyBoxWithExplosion(this, box);
   }
